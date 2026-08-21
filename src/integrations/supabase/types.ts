@@ -14,7 +14,278 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          address: string
+          amount: number | null
+          body_region: string | null
+          created_at: string
+          customer_name: string
+          details: Json
+          discount: number
+          id: string
+          notes: string | null
+          nurse_id: string | null
+          nurse_share: number | null
+          payment_method: string | null
+          payment_status: string
+          phone: string
+          platform_share: number | null
+          price_estimate: string | null
+          promo_code: string | null
+          rating: number | null
+          referral_code: string | null
+          review: string | null
+          service: string
+          status: string
+          stitch_count: number | null
+          tier: string
+          time_slot: string | null
+          total: number | null
+          tracking_id: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          amount?: number | null
+          body_region?: string | null
+          created_at?: string
+          customer_name: string
+          details?: Json
+          discount?: number
+          id?: string
+          notes?: string | null
+          nurse_id?: string | null
+          nurse_share?: number | null
+          payment_method?: string | null
+          payment_status?: string
+          phone: string
+          platform_share?: number | null
+          price_estimate?: string | null
+          promo_code?: string | null
+          rating?: number | null
+          referral_code?: string | null
+          review?: string | null
+          service: string
+          status?: string
+          stitch_count?: number | null
+          tier?: string
+          time_slot?: string | null
+          total?: number | null
+          tracking_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          amount?: number | null
+          body_region?: string | null
+          created_at?: string
+          customer_name?: string
+          details?: Json
+          discount?: number
+          id?: string
+          notes?: string | null
+          nurse_id?: string | null
+          nurse_share?: number | null
+          payment_method?: string | null
+          payment_status?: string
+          phone?: string
+          platform_share?: number | null
+          price_estimate?: string | null
+          promo_code?: string | null
+          rating?: number | null
+          referral_code?: string | null
+          review?: string | null
+          service?: string
+          status?: string
+          stitch_count?: number | null
+          tier?: string
+          time_slot?: string | null
+          total?: number | null
+          tracking_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_nurse_id_fkey"
+            columns: ["nurse_id"]
+            isOneToOne: false
+            referencedRelation: "nurses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalog_items: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          discount_pct: number
+          id: string
+          image_url: string | null
+          item_key: string
+          kind: string
+          name: string
+          name_en: string
+          price: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          discount_pct?: number
+          id?: string
+          image_url?: string | null
+          item_key: string
+          kind?: string
+          name: string
+          name_en?: string
+          price?: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          discount_pct?: number
+          id?: string
+          image_url?: string | null
+          item_key?: string
+          kind?: string
+          name?: string
+          name_en?: string
+          price?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          created_at: string
+          id: string
+          last_service: string | null
+          name: string | null
+          phone: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_service?: string | null
+          name?: string | null
+          phone: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_service?: string | null
+          name?: string | null
+          phone?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      nurses: {
+        Row: {
+          active: boolean
+          area: string | null
+          completed_visits: number
+          created_at: string
+          id: string
+          login_pin: string
+          name: string
+          nurse_code: string
+          phone: string
+          photo_url: string | null
+          rating: number
+          specialties: string[]
+          status: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          area?: string | null
+          completed_visits?: number
+          created_at?: string
+          id?: string
+          login_pin?: string
+          name: string
+          nurse_code: string
+          phone: string
+          photo_url?: string | null
+          rating?: number
+          specialties?: string[]
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          area?: string | null
+          completed_visits?: number
+          created_at?: string
+          id?: string
+          login_pin?: string
+          name?: string
+          nurse_code?: string
+          phone?: string
+          photo_url?: string | null
+          rating?: number
+          specialties?: string[]
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_type: string
+          expiry_date: string | null
+          id: string
+          updated_at: string
+          usage_limit: number | null
+          used_count: number
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_type?: string
+          expiry_date?: string | null
+          id?: string
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_type?: string
+          expiry_date?: string | null
+          id?: string
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+          value?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
