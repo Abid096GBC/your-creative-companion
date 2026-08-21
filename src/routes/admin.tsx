@@ -62,8 +62,11 @@ const TABS = [
   { id: "bookings", label: "বুকিং ও ডিসপ্যাচ" },
   { id: "nurses", label: "নার্স ডেটাবেজ" },
   { id: "pricing", label: "প্রোডাক্ট ও প্রাইসিং" },
+  { id: "promo", label: "প্রমো ও কুপন" },
+  { id: "medgemma", label: "MedGemma (মেডিকেল)" },
   { id: "ai", label: "AI অ্যাসিস্ট্যান্ট" },
 ] as const;
+
 
 function serviceKey(service: string) {
   const s = service.toLowerCase();
