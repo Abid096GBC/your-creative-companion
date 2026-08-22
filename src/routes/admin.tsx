@@ -412,65 +412,65 @@ function AdminPage() {
         )}
 
         {tab === "pricing" && (
-          <div className="card-elevated mt-6 overflow-x-auto p-0">
-            <table className="w-full min-w-[700px] text-sm">
-              <thead className="bg-secondary/70 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3">আইটেম</th>
-                  <th className="px-4 py-3">ধরন</th>
-                  <th className="px-4 py-3">একক</th>
-                  <th className="px-4 py-3">মূল্য (৳)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {catalog.map((c) => (
-                  <tr key={c.id} className="border-t border-border">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-foreground">{c.name}</p>
-                      <p className="text-xs text-muted-foreground">{c.name_en}</p>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{c.kind}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{c.unit}</td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        defaultValue={Number(c.price)}
-                        className="w-28 rounded-md border border-border bg-background px-2 py-1"
-                        onBlur={(e) => {
-                          const price = Number(e.target.value);
-                          if (price === Number(c.price)) return;
-                          void updatePrice({ data: { password, id: c.id, price } }).then(() => load(password));
-                        }}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-6">
+            <StoreManager password={password} />
+          </div>
+        )}
+
+        {tab === "promo" && (
+          <div className="mt-6">
+            <PromoManager password={password} />
+          </div>
+        )}
+
+        {tab === "medgemma" && (
+          <div className="card-elevated mt-6 space-y-4 p-5">
+            <div>
+              <h2 className="text-base font-bold text-foreground">MedGemma — মেডিকেল রেকর্ড বিশ্লেষণ</h2>
+              <p className="text-xs text-muted-foreground">
+                প্রেসক্রিপশন, ল্যাব রিপোর্ট বা মেডিকেল রেকর্ডের ছবি আপলোড করুন — ওষুধ, ডোজ ও নার্স নির্দেশনা বের করা হবে।
+              </p>
+            </div>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+              📷 প্রেসক্রিপশন / রিপোর্ট আপলোড
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () => void runMed({ imageData: String(reader.result) });
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </label>
+            <div className="flex gap-2">
+              <Input
+                value={medPrompt}
+                placeholder="ক্লিনিক্যাল প্রশ্ন লিখুন — যেমন: Ceftriaxone 1gm ডোজ বাচ্চার জন্য?"
+                onChange={(e) => setMedPrompt(e.target.value)}
+              />
+              <Button variant="softOutline" disabled={medBusy} onClick={() => void runMed({ prompt: medPrompt })}>
+                বিশ্লেষণ
+              </Button>
+            </div>
+            <div className="min-h-40 whitespace-pre-wrap rounded-xl border border-border bg-secondary/40 p-4 text-sm text-foreground">
+              {medBusy ? "MedGemma বিশ্লেষণ করছে…" : medOut || "এখানে ক্লিনিক্যাল বিশ্লেষণ দেখা যাবে।"}
+            </div>
           </div>
         )}
 
         {tab === "ai" && (
           <div className="card-elevated mt-6 space-y-4 p-5">
+            <p className="text-xs text-muted-foreground">
+              Gemini অপারেশনাল অ্যাসিস্ট্যান্ট — বুকিং, ডিসপ্যাচ ও ব্যবসায়িক প্রশ্নের জন্য।
+            </p>
             <div className="flex flex-wrap gap-2">
               <Button variant="hero" size="sm" disabled={aiBusy} onClick={() => void runAi("summary")}>
                 <Sparkles /> দৈনিক সামারি
               </Button>
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
-                📷 প্রেসক্রিপশন OCR
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = () => void runAi("ocr", { imageData: String(reader.result) });
-                    reader.readAsDataURL(file);
-                  }}
-                />
-              </label>
             </div>
             <div className="flex gap-2">
               <Input
@@ -487,6 +487,7 @@ function AdminPage() {
             </div>
           </div>
         )}
+
       </div>
 
       <Dialog open={!!dispatchFor} onOpenChange={(v) => !v && setDispatchFor(null)}>
