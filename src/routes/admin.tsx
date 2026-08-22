@@ -102,23 +102,38 @@ function AdminPage() {
   const assign = useServerFn(adminAssignNurse);
   const setPay = useServerFn(adminSetPayment);
   const saveNurse = useServerFn(adminSaveNurse);
-  const updatePrice = useServerFn(adminUpdatePrice);
   const ai = useServerFn(adminAiAssistant);
+  const medGemma = useServerFn(adminMedGemma);
 
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("bookings");
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [nurses, setNurses] = useState<NurseRow[]>([]);
-  const [catalog, setCatalog] = useState<CatalogRow[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [dispatchFor, setDispatchFor] = useState<BookingRow | null>(null);
   const [aiOut, setAiOut] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [medOut, setMedOut] = useState("");
+  const [medBusy, setMedBusy] = useState(false);
+  const [medPrompt, setMedPrompt] = useState("");
 
   const nurseById = useMemo(() => new Map(nurses.map((n) => [n.id, n])), [nurses]);
+
+  async function runMed(extra: { prompt?: string; imageData?: string }) {
+    setMedBusy(true);
+    setMedOut("");
+    try {
+      const res = await medGemma({ data: { password, ...extra } });
+      setMedOut(res.text);
+    } catch {
+      setMedOut("MedGemma এখন উত্তর দিতে পারছে না — আবার চেষ্টা করুন।");
+    } finally {
+      setMedBusy(false);
+    }
+  }
 
   async function load(pwd: string) {
     setBusy(true);
@@ -127,8 +142,8 @@ function AdminPage() {
       const data = await list({ data: { password: pwd } });
       setRows(data.bookings);
       setNurses(data.nurses);
-      setCatalog(data.catalog);
       setAuthed(true);
+
     } catch {
       setError("❌ ভুল পাসওয়ার্ড — সঠিক সিকিউরিটি কোড দিন।");
       setAuthed(false);
