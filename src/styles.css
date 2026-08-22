@@ -170,6 +170,23 @@
   background-image: var(--gradient-soft);
 }
 
+@utility gradient-offer-a {
+  background-image: var(--gradient-offer-a);
+}
+
+@utility gradient-offer-b {
+  background-image: var(--gradient-offer-b);
+}
+
+@utility gradient-offer-c {
+  background-image: var(--gradient-offer-c);
+}
+
+@utility gradient-gold {
+  background-image: var(--gradient-gold);
+}
+
+
 @utility card-elevated {
   background-color: var(--color-card);
   border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
