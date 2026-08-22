@@ -19,15 +19,16 @@ import {
   adminListBookings,
   adminSaveNurse,
   adminSetPayment,
-  adminUpdatePrice,
   adminUpdateStatus,
 } from "@/lib/bookings.functions";
+import { adminMedGemma } from "@/lib/admin-extra.functions";
+import { StoreManager } from "@/components/admin/StoreManager";
+import { PromoManager } from "@/components/admin/PromoManager";
 import {
   NURSE_STATUSES,
   PAYMENT_STATUSES,
   STATUSES,
   type BookingRow,
-  type CatalogRow,
   type NurseRow,
 } from "@/lib/booking-types";
 import { nurseSharePct } from "@/lib/site";
