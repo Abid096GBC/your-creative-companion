@@ -59,8 +59,24 @@ function Home() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main>
+        {/* Location + search */}
+        <section className="gradient-soft border-b border-border/60">
+          <div className="mx-auto max-w-6xl space-y-4 px-4 py-5">
+            <LocationPicker />
+            <HomeSearch />
+          </div>
+        </section>
+
+        {/* Promo carousel + quick services */}
+        <section className="mx-auto max-w-6xl space-y-8 px-4 py-6 sm:py-8">
+          <PromoCarousel />
+          <ServiceGrid />
+          <OshudShonggiCard />
+          <VitalsWidget />
+        </section>
+
         {/* Hero */}
-        <section id="home" className="gradient-soft border-b border-border/60">
+        <section id="home" className="gradient-soft border-y border-border/60">
           <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 lg:grid-cols-2 lg:py-20">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card px-3 py-1 text-xs font-semibold text-primary">
@@ -97,6 +113,7 @@ function Home() {
             </div>
           </div>
         </section>
+
 
         {/* Services */}
         <section id="services" className="mx-auto max-w-6xl px-4 py-16">
