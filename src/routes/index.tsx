@@ -17,8 +17,15 @@ import { ServiceWizard } from "@/components/ServiceWizard";
 import { StoreSection } from "@/components/StoreSection";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
+import { LocationPicker } from "@/components/home/LocationPicker";
+import { HomeSearch } from "@/components/home/HomeSearch";
+import { PromoCarousel } from "@/components/home/PromoCarousel";
+import { ServiceGrid } from "@/components/home/ServiceGrid";
+import { OshudShonggiCard } from "@/components/home/OshudShonggiCard";
+import { VitalsWidget } from "@/components/home/VitalsWidget";
 import { SERVICES, SITE, waLink } from "@/lib/site";
 import heroImage from "@/assets/hero-care.jpg";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
