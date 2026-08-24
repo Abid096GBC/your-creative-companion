@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as WorkerRouteImport } from './routes/worker'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoreRoute = StoreRouteImport.update({
@@ -44,6 +50,7 @@ const WorkerRoute = WorkerRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
   '/worker': typeof WorkerRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
   '/worker': typeof WorkerRoute
@@ -59,21 +67,23 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
   '/worker': typeof WorkerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/store' | '/track' | '/worker'
+  fullPaths: '/' | '/admin' | '/orders' | '/store' | '/track' | '/worker'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/store' | '/track' | '/worker'
-  id: '__root__' | '/' | '/admin' | '/store' | '/track' | '/worker'
+  to: '/' | '/admin' | '/orders' | '/store' | '/track' | '/worker'
+  id: '__root__' | '/' | '/admin' | '/orders' | '/store' | '/track' | '/worker'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  OrdersRoute: typeof OrdersRoute
   StoreRoute: typeof StoreRoute
   TrackRoute: typeof TrackRoute
   WorkerRoute: typeof WorkerRoute
@@ -93,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/store': {
@@ -122,6 +139,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  OrdersRoute: OrdersRoute,
   StoreRoute: StoreRoute,
   TrackRoute: TrackRoute,
   WorkerRoute: WorkerRoute,
