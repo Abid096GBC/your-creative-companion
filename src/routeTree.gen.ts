@@ -15,6 +15,7 @@ import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as WorkerRouteImport } from './routes/worker'
+import { Route as BookingNursingRouteImport } from './routes/booking.nursing'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const WorkerRoute = WorkerRouteImport.update({
   path: '/worker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookingNursingRoute = BookingNursingRouteImport.update({
+  id: '/booking/nursing',
+  path: '/booking/nursing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
   '/worker': typeof WorkerRoute
+  '/booking/nursing': typeof BookingNursingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
   '/worker': typeof WorkerRoute
+  '/booking/nursing': typeof BookingNursingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,13 +79,36 @@ export interface FileRoutesById {
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
   '/worker': typeof WorkerRoute
+  '/booking/nursing': typeof BookingNursingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/orders' | '/store' | '/track' | '/worker'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/orders'
+    | '/store'
+    | '/track'
+    | '/worker'
+    | '/booking/nursing'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/orders' | '/store' | '/track' | '/worker'
-  id: '__root__' | '/' | '/admin' | '/orders' | '/store' | '/track' | '/worker'
+  to:
+    | '/'
+    | '/admin'
+    | '/orders'
+    | '/store'
+    | '/track'
+    | '/worker'
+    | '/booking/nursing'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/orders'
+    | '/store'
+    | '/track'
+    | '/worker'
+    | '/booking/nursing'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -87,6 +118,7 @@ export interface RootRouteChildren {
   StoreRoute: typeof StoreRoute
   TrackRoute: typeof TrackRoute
   WorkerRoute: typeof WorkerRoute
+  BookingNursingRoute: typeof BookingNursingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -133,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/booking/nursing': {
+      id: '/booking/nursing'
+      path: '/booking/nursing'
+      fullPath: '/booking/nursing'
+      preLoaderRoute: typeof BookingNursingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -143,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   StoreRoute: StoreRoute,
   TrackRoute: TrackRoute,
   WorkerRoute: WorkerRoute,
+  BookingNursingRoute: BookingNursingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
