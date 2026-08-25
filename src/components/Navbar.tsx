@@ -7,6 +7,7 @@ import { TrackOrder } from "@/components/TrackOrder";
 const LINKS = [
   { href: "/", label: "হোম" },
   { href: "/#services", label: "সেবাসমূহ" },
+  { href: "/orders", label: "আমার অর্ডার" },
   { href: "/store", label: "সার্জিক্যাল স্টোর" },
   { href: "/track", label: "অর্ডার ট্র্যাকিং" },
   { href: "/#contact", label: "যোগাযোগ" },
