@@ -81,9 +81,14 @@ export function Navbar() {
                 <a
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+                  className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary"
                 >
                   {l.label}
+                  {l.badge && unread > 0 && (
+                    <span className="grid size-5 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                      {unread}
+                    </span>
+                  )}
                 </a>
               </li>
             ))}
