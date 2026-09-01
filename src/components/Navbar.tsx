@@ -36,9 +36,14 @@ export function Navbar() {
             <li key={l.href}>
               <a
                 href={l.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
               >
                 {l.label}
+                {l.badge && unread > 0 && (
+                  <span className="grid size-5 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                    {unread}
+                  </span>
+                )}
               </a>
             </li>
           ))}
