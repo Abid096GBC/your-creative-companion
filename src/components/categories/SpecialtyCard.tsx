@@ -53,7 +53,7 @@ export function SpecialtyCard({ item }: { item: CategoryItem }) {
   }
 
   return (
-    <Link to={item.action.href} className={cls}>
+    <Link to={item.action.href as "/store"} className={cls}>
       {inner}
     </Link>
   );
