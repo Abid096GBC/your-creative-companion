@@ -3,11 +3,14 @@ import { HeartPulse, Menu, Phone, X, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SITE, waLink } from "@/lib/site";
 import { TrackOrder } from "@/components/TrackOrder";
+import { useUnreadInbox } from "@/lib/inbox-store";
 
 const LINKS = [
   { href: "/", label: "হোম" },
+  { href: "/categories", label: "ক্যাটাগরি" },
   { href: "/#services", label: "সেবাসমূহ" },
   { href: "/orders", label: "আমার অর্ডার" },
+  { href: "/inbox", label: "ইনবক্স", badge: true },
   { href: "/store", label: "সার্জিক্যাল স্টোর" },
   { href: "/track", label: "অর্ডার ট্র্যাকিং" },
   { href: "/#contact", label: "যোগাযোগ" },
@@ -16,6 +19,7 @@ const LINKS = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const unread = useUnreadInbox();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md">
@@ -32,9 +36,14 @@ export function Navbar() {
             <li key={l.href}>
               <a
                 href={l.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
               >
                 {l.label}
+                {l.badge && unread > 0 && (
+                  <span className="grid size-5 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                    {unread}
+                  </span>
+                )}
               </a>
             </li>
           ))}
@@ -72,9 +81,14 @@ export function Navbar() {
                 <a
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary"
+                  className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary"
                 >
                   {l.label}
+                  {l.badge && unread > 0 && (
+                    <span className="grid size-5 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                      {unread}
+                    </span>
+                  )}
                 </a>
               </li>
             ))}
