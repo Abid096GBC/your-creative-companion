@@ -15,6 +15,7 @@ const LINKS = [
   { href: "/track", label: "অর্ডার ট্র্যাকিং" },
   { href: "/#contact", label: "যোগাযোগ" },
   { href: "/worker", label: "নার্স পোর্টাল" },
+  { href: "/more", label: "অ্যাকাউন্ট" },
 ];
 
 export function Navbar() {

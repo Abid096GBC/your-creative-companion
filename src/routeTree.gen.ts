@@ -11,11 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CareerRouteImport } from './routes/career'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as InboxRouteImport } from './routes/inbox'
+import { Route as MedGamerRouteImport } from './routes/med-gamer'
+import { Route as MoreRouteImport } from './routes/more'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as TrackRouteImport } from './routes/track'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as WorkerRouteImport } from './routes/worker'
 import { Route as BookingNursingRouteImport } from './routes/booking.nursing'
 
@@ -29,6 +33,11 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CareerRoute = CareerRouteImport.update({
+  id: '/career',
+  path: '/career',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
@@ -37,6 +46,16 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const InboxRoute = InboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MedGamerRoute = MedGamerRouteImport.update({
+  id: '/med-gamer',
+  path: '/med-gamer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoreRoute = MoreRouteImport.update({
+  id: '/more',
+  path: '/more',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -54,6 +73,11 @@ const TrackRoute = TrackRouteImport.update({
   path: '/track',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkerRoute = WorkerRouteImport.update({
   id: '/worker',
   path: '/worker',
@@ -68,22 +92,30 @@ const BookingNursingRoute = BookingNursingRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/career': typeof CareerRoute
   '/categories': typeof CategoriesRoute
   '/inbox': typeof InboxRoute
+  '/med-gamer': typeof MedGamerRoute
+  '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
+  '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/career': typeof CareerRoute
   '/categories': typeof CategoriesRoute
   '/inbox': typeof InboxRoute
+  '/med-gamer': typeof MedGamerRoute
+  '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
+  '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
 }
@@ -91,11 +123,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/career': typeof CareerRoute
   '/categories': typeof CategoriesRoute
   '/inbox': typeof InboxRoute
+  '/med-gamer': typeof MedGamerRoute
+  '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
+  '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
 }
@@ -104,33 +140,45 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/career'
     | '/categories'
     | '/inbox'
+    | '/med-gamer'
+    | '/more'
     | '/orders'
     | '/store'
     | '/track'
+    | '/wallet'
     | '/worker'
     | '/booking/nursing'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
+    | '/career'
     | '/categories'
     | '/inbox'
+    | '/med-gamer'
+    | '/more'
     | '/orders'
     | '/store'
     | '/track'
+    | '/wallet'
     | '/worker'
     | '/booking/nursing'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/career'
     | '/categories'
     | '/inbox'
+    | '/med-gamer'
+    | '/more'
     | '/orders'
     | '/store'
     | '/track'
+    | '/wallet'
     | '/worker'
     | '/booking/nursing'
   fileRoutesById: FileRoutesById
@@ -138,11 +186,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  CareerRoute: typeof CareerRoute
   CategoriesRoute: typeof CategoriesRoute
   InboxRoute: typeof InboxRoute
+  MedGamerRoute: typeof MedGamerRoute
+  MoreRoute: typeof MoreRoute
   OrdersRoute: typeof OrdersRoute
   StoreRoute: typeof StoreRoute
   TrackRoute: typeof TrackRoute
+  WalletRoute: typeof WalletRoute
   WorkerRoute: typeof WorkerRoute
   BookingNursingRoute: typeof BookingNursingRoute
 }
@@ -163,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/career': {
+      id: '/career'
+      path: '/career'
+      fullPath: '/career'
+      preLoaderRoute: typeof CareerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categories': {
       id: '/categories'
       path: '/categories'
@@ -175,6 +234,20 @@ declare module '@tanstack/react-router' {
       path: '/inbox'
       fullPath: '/inbox'
       preLoaderRoute: typeof InboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/med-gamer': {
+      id: '/med-gamer'
+      path: '/med-gamer'
+      fullPath: '/med-gamer'
+      preLoaderRoute: typeof MedGamerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/more': {
+      id: '/more'
+      path: '/more'
+      fullPath: '/more'
+      preLoaderRoute: typeof MoreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -198,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/worker': {
       id: '/worker'
       path: '/worker'
@@ -218,11 +298,15 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  CareerRoute: CareerRoute,
   CategoriesRoute: CategoriesRoute,
   InboxRoute: InboxRoute,
+  MedGamerRoute: MedGamerRoute,
+  MoreRoute: MoreRoute,
   OrdersRoute: OrdersRoute,
   StoreRoute: StoreRoute,
   TrackRoute: TrackRoute,
+  WalletRoute: WalletRoute,
   WorkerRoute: WorkerRoute,
   BookingNursingRoute: BookingNursingRoute,
 }
