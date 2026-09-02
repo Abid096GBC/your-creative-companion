@@ -15,6 +15,7 @@ import { Route as CareerRouteImport } from './routes/career'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as MedGamerRouteImport } from './routes/med-gamer'
+import { Route as MoreRouteImport } from './routes/more'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as TrackRouteImport } from './routes/track'
@@ -50,6 +51,11 @@ const InboxRoute = InboxRouteImport.update({
 const MedGamerRoute = MedGamerRouteImport.update({
   id: '/med-gamer',
   path: '/med-gamer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoreRoute = MoreRouteImport.update({
+  id: '/more',
+  path: '/more',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/inbox': typeof InboxRoute
   '/med-gamer': typeof MedGamerRoute
+  '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/inbox': typeof InboxRoute
   '/med-gamer': typeof MedGamerRoute
+  '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/inbox': typeof InboxRoute
   '/med-gamer': typeof MedGamerRoute
+  '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
   '/track': typeof TrackRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/inbox'
     | '/med-gamer'
+    | '/more'
     | '/orders'
     | '/store'
     | '/track'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/inbox'
     | '/med-gamer'
+    | '/more'
     | '/orders'
     | '/store'
     | '/track'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/inbox'
     | '/med-gamer'
+    | '/more'
     | '/orders'
     | '/store'
     | '/track'
@@ -178,6 +190,7 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   InboxRoute: typeof InboxRoute
   MedGamerRoute: typeof MedGamerRoute
+  MoreRoute: typeof MoreRoute
   OrdersRoute: typeof OrdersRoute
   StoreRoute: typeof StoreRoute
   TrackRoute: typeof TrackRoute
@@ -228,6 +241,13 @@ declare module '@tanstack/react-router' {
       path: '/med-gamer'
       fullPath: '/med-gamer'
       preLoaderRoute: typeof MedGamerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/more': {
+      id: '/more'
+      path: '/more'
+      fullPath: '/more'
+      preLoaderRoute: typeof MoreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -282,6 +302,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   InboxRoute: InboxRoute,
   MedGamerRoute: MedGamerRoute,
+  MoreRoute: MoreRoute,
   OrdersRoute: OrdersRoute,
   StoreRoute: StoreRoute,
   TrackRoute: TrackRoute,
