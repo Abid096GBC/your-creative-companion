@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 export type UserProfile = {
   name: string;
   phone: string;
-  avatar?: string;
+  avatar?: string | undefined;
 };
 
 export type CareerApplication = {
@@ -16,9 +16,9 @@ export type CareerApplication = {
   address: string;
   role: string;
   experience: number;
-  nid?: string;
-  license?: string;
-  cvName?: string;
+  nid?: string | undefined;
+  license?: string | undefined;
+  cvName?: string | undefined;
   createdAt: string;
 };
 
