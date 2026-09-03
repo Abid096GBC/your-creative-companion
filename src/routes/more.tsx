@@ -284,15 +284,15 @@ function VitalsDialog({ open, onClose }: { open: boolean; onClose: () => void })
           <ul className="space-y-2 text-sm">
             <li className="flex justify-between rounded-lg bg-secondary px-3 py-2">
               <span className="text-muted-foreground">Blood Pressure</span>
-              <span className="font-semibold text-foreground">{v.sys || "—"}/{v.dia || "—"} mmHg</span>
+              <span className="font-semibold text-foreground">{v['sys'] || "—"}/{v['dia'] || "—"} mmHg</span>
             </li>
             <li className="flex justify-between rounded-lg bg-secondary px-3 py-2">
               <span className="text-muted-foreground">Blood Sugar</span>
-              <span className="font-semibold text-foreground">{v.sugar || "—"} mmol/L</span>
+              <span className="font-semibold text-foreground">{v['sugar'] || "—"} mmol/L</span>
             </li>
             <li className="flex justify-between rounded-lg bg-secondary px-3 py-2">
               <span className="text-muted-foreground">Pulse Rate</span>
-              <span className="font-semibold text-foreground">{v.pulse || "—"} bpm</span>
+              <span className="font-semibold text-foreground">{v['pulse'] || "—"} bpm</span>
             </li>
           </ul>
         ) : (

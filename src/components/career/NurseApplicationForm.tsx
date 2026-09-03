@@ -18,7 +18,7 @@ export function NurseApplicationForm() {
   const [email, setEmail] = useState("");
   const [gender, setGender] = useState<CareerApplication["gender"]>("Female");
   const [address, setAddress] = useState("");
-  const [role, setRole] = useState(ROLES[0]);
+  const [role, setRole] = useState(ROLES[0]!);
   const [experience, setExperience] = useState(2);
   const [nid, setNid] = useState<string>();
   const [license, setLicense] = useState<string>();
