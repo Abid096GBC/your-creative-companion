@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, type LucideIcon } from "lucide-react";
-import { ServiceWizard } from "@/components/ServiceWizard";
+import { toNursingService } from "@/lib/booking-links";
 import { waLink } from "@/lib/site";
 
 export type CategoryAction =
@@ -32,15 +32,14 @@ export function SpecialtyCard({ item }: { item: CategoryItem }) {
     </>
   );
 
-  const cls = "card-elevated flex min-h-11 w-full items-center gap-3 p-4";
+  const cls = "card-elevated flex min-h-14 w-full items-center gap-3 p-4";
 
+  // Every nursing action funnels into the single /booking/nursing wizard.
   if (item.action.type === "wizard") {
     return (
-      <ServiceWizard serviceId={item.action.serviceId}>
-        <button type="button" className={cls}>
-          {inner}
-        </button>
-      </ServiceWizard>
+      <Link to="/booking/nursing" search={{ service: toNursingService(item.action.serviceId) }} className={cls}>
+        {inner}
+      </Link>
     );
   }
 

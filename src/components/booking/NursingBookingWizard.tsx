@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { fileToCompressedDataUrl } from "@/lib/image-compress";
 import { CONVENIENCE_FEE } from "@/lib/site";
 import { PatientSelectorModal } from "@/components/booking/PatientSelectorModal";
+import { toNursingService } from "@/lib/booking-links";
 import {
   loadPatients,
   newTrackingId,
@@ -36,7 +37,10 @@ const SERVICES: Item[] = [
   { id: "postop", title: "পোস্ট-সার্জারি কেয়ার", en: "Post-Surgery Care", price: 800, duration: "≈ ১ ঘন্টা" },
   { id: "elderly", title: "বয়স্ক সেবা", en: "Elderly Care", price: 1200, duration: "≈ ৪ ঘন্টা শিফট" },
   { id: "physio", title: "ফিজিওথেরাপি", en: "Physiotherapy", price: 700, duration: "≈ ৪৫ মিনিট" },
-  { id: "saline", title: "স্যালাইন পুশ", en: "Saline Push", price: 600, duration: "≈ ১ ঘন্টা" },
+  { id: "saline", title: "স্যালাইন পুশ / IV সেটআপ", en: "Saline & IV Setup", price: 600, duration: "≈ ১ ঘন্টা" },
+  { id: "suturing", title: "সেলাই ও সেলাই কাটা", en: "Suturing / Stitch Removal", price: 300, duration: "≈ ৪৫ মিনিট" },
+  { id: "nebulizer", title: "নেবুলাইজার সেবা", en: "Nebulizer", price: 100, duration: "≈ ২০ মিনিট" },
+  { id: "vitals", title: "ভাইটাল চেক", en: "Health Vitals Check", price: 100, duration: "≈ ১৫ মিনিট" },
 ];
 
 const SLOTS = [
@@ -47,10 +51,12 @@ const SLOTS = [
 
 const STEPS = ["সার্ভিস", "রোগী", "সময়", "নোট", "পেমেন্ট"];
 
-export function NursingBookingWizard() {
+export function NursingBookingWizard({ initialService }: { initialService?: string | undefined }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [picked, setPicked] = useState<string[]>([]);
+  const [picked, setPicked] = useState<string[]>(
+    initialService ? [toNursingService(initialService)] : [],
+  );
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientId, setPatientId] = useState("");
   const [date, setDate] = useState("");

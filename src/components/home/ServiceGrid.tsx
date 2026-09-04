@@ -1,5 +1,5 @@
+import { Link } from "@tanstack/react-router";
 import { FlaskConical, Package, Sparkles, Stethoscope, UserRound } from "lucide-react";
-import { ServiceWizard } from "@/components/ServiceWizard";
 import { waLink } from "@/lib/site";
 
 const CARDS = [
@@ -26,32 +26,31 @@ const CARDS = [
 export function ServiceGrid() {
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-      {/* Featured: Home Nursing & Care */}
-      <ServiceWizard serviceId="injection">
-        <button
-          type="button"
-          className="gradient-primary col-span-2 flex min-w-0 flex-col items-start gap-2 rounded-2xl p-5 text-left text-primary-foreground shadow-glow transition-transform hover:-translate-y-1 lg:col-span-2"
-        >
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-background/20 px-2.5 py-1 text-[11px] font-semibold">
-            <Sparkles className="size-3.5" /> আমাদের প্রধান সেবা
-          </span>
-          <span className="grid size-11 place-items-center rounded-xl bg-background/20">
-            <Stethoscope className="size-6" />
-          </span>
-          <span className="text-lg font-bold leading-tight">Home Nursing &amp; Care</span>
-          <span className="text-sm font-medium opacity-90">হোম নার্সিং ও কেয়ার</span>
-          <span className="text-xs leading-relaxed opacity-85">
-            Dressing • Injection • Post-Surgery • Elderly Care • Physiotherapy
-          </span>
-        </button>
-      </ServiceWizard>
+      {/* Featured: Home Nursing & Care — always the unified booking wizard */}
+      <Link
+        to="/booking/nursing"
+        search={{ service: "injection" }}
+        className="gradient-primary col-span-2 flex min-h-11 min-w-0 flex-col items-start gap-2 rounded-2xl p-5 text-left text-primary-foreground shadow-glow transition-transform hover:-translate-y-1 lg:col-span-2"
+      >
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-background/20 px-2.5 py-1 text-[11px] font-semibold">
+          <Sparkles className="size-3.5" /> আমাদের প্রধান সেবা
+        </span>
+        <span className="grid size-11 place-items-center rounded-xl bg-background/20">
+          <Stethoscope className="size-6" />
+        </span>
+        <span className="text-lg font-bold leading-tight">Home Nursing &amp; Care</span>
+        <span className="text-sm font-medium opacity-90">হোম নার্সিং ও কেয়ার</span>
+        <span className="text-xs leading-relaxed opacity-85">
+          Dressing • Injection • Post-Surgery • Elderly Care • Physiotherapy
+        </span>
+      </Link>
 
       {/* Doctor consultation */}
       <a
         href={waLink("Hello Shushrusha, I would like a specialist doctor consultation.")}
         target="_blank"
         rel="noopener noreferrer"
-        className="card-elevated flex min-w-0 flex-col items-start gap-2 p-5"
+        className="card-elevated flex min-h-11 min-w-0 flex-col items-start gap-2 p-5"
       >
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
           <UserRound className="size-6" />
@@ -74,15 +73,15 @@ export function ServiceGrid() {
             <span className="text-xs leading-relaxed text-muted-foreground">{c.sub}</span>
           </>
         );
-        return (
-          <a
-            key={c.id}
-            href={c.href}
-            {...(c.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            className="card-elevated flex min-w-0 flex-col items-start gap-2 p-5"
-          >
+        const cls = "card-elevated flex min-h-11 min-w-0 flex-col items-start gap-2 p-5";
+        return c.external ? (
+          <a key={c.id} href={c.href} target="_blank" rel="noopener noreferrer" className={cls}>
             {inner}
           </a>
+        ) : (
+          <Link key={c.id} to="/store" className={cls}>
+            {inner}
+          </Link>
         );
       })}
     </div>
