@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ServiceWizard } from "@/components/ServiceWizard";
+import { Link } from "@tanstack/react-router";
 
 const KEY = "shushrusha:vitals";
 
@@ -161,11 +161,11 @@ export function VitalsWidget() {
           </DialogContent>
         </Dialog>
 
-        <ServiceWizard serviceId="vitals">
-          <Button variant="hero" size="sm">
+        <Button asChild variant="hero" size="sm" className="min-h-11">
+          <Link to="/booking/nursing" search={{ service: "vitals" }}>
             নার্স দিয়ে চেক করান
-          </Button>
-        </ServiceWizard>
+          </Link>
+        </Button>
       </div>
     </div>
   );

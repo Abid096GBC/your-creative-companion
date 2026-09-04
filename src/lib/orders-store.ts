@@ -1,4 +1,5 @@
-/** Local-first store for patients and orders (localStorage, no backend yet). */
+/** Single source of truth for patients + orders across every Shushrusha flow (localStorage). */
+import { useEffect, useState } from "react";
 
 export type Relation = "Self" | "Father" | "Mother" | "Spouse" | "Other";
 
@@ -41,13 +42,32 @@ export type LocalOrder = {
   createdAt: string;
 };
 
-const PATIENTS_KEY = "shushrusha:patients";
-const ORDERS_KEY = "shushrusha:orders";
-export const LOCATION_KEY = "shushrusha:location";
+/** Standardized keys (legacy colon keys are migrated on first read). */
+export const PATIENTS_KEY = "shushrusha_patients";
+export const ORDERS_KEY = "shushrusha_orders";
+export const LOCATION_KEY = "shushrusha_location";
+
+const LEGACY = {
+  [PATIENTS_KEY]: "shushrusha:patients",
+  [ORDERS_KEY]: "shushrusha:orders",
+  [LOCATION_KEY]: "shushrusha:location",
+} as const;
+
+/** Any store write broadcasts this so every mounted component re-reads immediately. */
+export const STORE_EVENT = "shushrusha:store";
+
+function migrate(key: string) {
+  const legacy = LEGACY[key as keyof typeof LEGACY];
+  if (!legacy) return;
+  const old = localStorage.getItem(legacy);
+  if (old !== null && localStorage.getItem(key) === null) localStorage.setItem(key, old);
+  if (old !== null) localStorage.removeItem(legacy);
+}
 
 function read<T>(key: string): T[] {
   if (typeof window === "undefined") return [];
   try {
+    migrate(key);
     const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T[]) : [];
   } catch {
@@ -57,7 +77,7 @@ function read<T>(key: string): T[] {
 
 function write<T>(key: string, rows: T[]) {
   localStorage.setItem(key, JSON.stringify(rows));
-  window.dispatchEvent(new CustomEvent("shushrusha:store"));
+  window.dispatchEvent(new CustomEvent(STORE_EVENT));
 }
 
 export const loadPatients = () => read<Patient>(PATIENTS_KEY);
@@ -78,14 +98,51 @@ export function saveOrder(o: LocalOrder) {
   write(ORDERS_KEY, [o, ...rows]);
 }
 
+/** Update a single order's status and notify every subscriber. */
+export function updateOrderStatus(id: string, status: OrderStatus) {
+  write(
+    ORDERS_KEY,
+    loadOrders().map((o) => (o.id === id ? { ...o, status } : o)),
+  );
+}
+
 export function newTrackingId() {
   return `SHU-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
 export function savedLocation() {
   if (typeof window === "undefined") return "";
+  migrate(LOCATION_KEY);
   return localStorage.getItem(LOCATION_KEY) ?? "";
 }
+
+export function saveLocation(value: string) {
+  localStorage.setItem(LOCATION_KEY, value);
+  window.dispatchEvent(new CustomEvent(STORE_EVENT));
+}
+
+/** Hydration-safe subscription: reads storage only after mount, syncs on store + cross-tab events. */
+function useStoreValue<T>(selector: () => T, initial: T): T {
+  const [value, setValue] = useState<T>(initial);
+  useEffect(() => {
+    const sync = () => setValue(selector());
+    sync();
+    window.addEventListener(STORE_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(STORE_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return value;
+}
+
+export const useOrders = () => useStoreValue<LocalOrder[]>(loadOrders, []);
+export const usePatients = () => useStoreValue<Patient[]>(loadPatients, []);
+export const useSavedLocation = () => useStoreValue<string>(savedLocation, "");
+export const useActiveOrderCount = () =>
+  useStoreValue<number>(() => loadOrders().filter((o) => ACTIVE_STATUSES.includes(o.status)).length, 0);
 
 export const ACTIVE_STATUSES: OrderStatus[] = ["Pending", "Assigned", "En Route"];
 
