@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Link } from "@tanstack/react-router";
 
-const KEY = "shushrusha:vitals";
+const KEY = "shushrusha_vitals";
 
 type Vitals = { sys: string; dia: string; sugar: string; pulse: string };
 const EMPTY: Vitals = { sys: "", dia: "", sugar: "", pulse: "" };

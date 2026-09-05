@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,25 +13,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SITE } from "@/lib/site";
-
-const KEY = "shushrusha:location";
+import { saveLocation, useSavedLocation } from "@/lib/orders-store";
 
 export function LocationPicker() {
-  const [saved, setSaved] = useState<string>("");
+  const saved = useSavedLocation();
   const [open, setOpen] = useState(false);
   const [area, setArea] = useState(SITE.areas[0]);
   const [address, setAddress] = useState("");
 
-  useEffect(() => {
-    const v = localStorage.getItem(KEY);
-    if (v) setSaved(v);
-  }, []);
-
   function save() {
     const value = [address.trim(), area].filter(Boolean).join(", ");
     if (!value) return;
-    localStorage.setItem(KEY, value);
-    setSaved(value);
+    saveLocation(value);
     setOpen(false);
   }
 

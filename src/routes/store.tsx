@@ -123,7 +123,7 @@ function StorePage() {
             <h2 className="mt-4 text-xl font-bold text-foreground">অর্ডার সফল হয়েছে!</h2>
             <p className="mt-3 text-2xl font-bold text-primary">#{done}</p>
             <Button asChild className="mt-6 w-full" variant="hero">
-              <Link to="/track">অর্ডার ট্র্যাক করুন</Link>
+              <Link to="/orders">অর্ডার ট্র্যাক করুন</Link>
             </Button>
           </div>
         ) : (
