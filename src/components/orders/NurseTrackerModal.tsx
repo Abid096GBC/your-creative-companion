@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { Check, MessageCircle, Phone, Siren, Timer } from "lucide-react";
+import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +23,19 @@ export function NurseTrackerModal({
 }) {
   const active = order ? timelineIndex(order.status) : 0;
   const nurse = order?.nurse;
+  const [qr, setQr] = useState("");
+
+  // Service-completion QR: the nurse scans this at the patient's home.
+  useEffect(() => {
+    if (!open || !order) return setQr("");
+    let alive = true;
+    void QRCode.toDataURL(`SHUSHRUSHA:${order.id}`, { width: 320, margin: 1 }).then((url) => {
+      if (alive) setQr(url);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [open, order]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,6 +80,15 @@ export function NurseTrackerModal({
             </li>
           ))}
         </ol>
+
+        {qr && (
+          <div className="rounded-xl border border-border bg-card p-3 text-center">
+            <img src={qr} alt={`অর্ডার ${order?.id} এর ভেরিফিকেশন QR কোড`} className="mx-auto size-40" />
+            <p className="mt-2 text-xs text-muted-foreground">
+              সেবা শেষে নার্সকে এই QR কোডটি স্ক্যান করতে দিন — এতে সার্ভিস সম্পন্ন হিসেবে নিশ্চিত হবে।
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           <Button asChild variant="call" className="min-h-11">
