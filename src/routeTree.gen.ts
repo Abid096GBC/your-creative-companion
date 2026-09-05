@@ -18,7 +18,6 @@ import { Route as MedGamerRouteImport } from './routes/med-gamer'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as StoreRouteImport } from './routes/store'
-import { Route as TrackRouteImport } from './routes/track'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as WorkerRouteImport } from './routes/worker'
 import { Route as BookingNursingRouteImport } from './routes/booking.nursing'
@@ -68,11 +67,6 @@ const StoreRoute = StoreRouteImport.update({
   path: '/store',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TrackRoute = TrackRouteImport.update({
-  id: '/track',
-  path: '/track',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
@@ -99,7 +93,6 @@ export interface FileRoutesByFullPath {
   '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
-  '/track': typeof TrackRoute
   '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
@@ -114,7 +107,6 @@ export interface FileRoutesByTo {
   '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
-  '/track': typeof TrackRoute
   '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
@@ -130,7 +122,6 @@ export interface FileRoutesById {
   '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
   '/store': typeof StoreRoute
-  '/track': typeof TrackRoute
   '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
@@ -147,7 +138,6 @@ export interface FileRouteTypes {
     | '/more'
     | '/orders'
     | '/store'
-    | '/track'
     | '/wallet'
     | '/worker'
     | '/booking/nursing'
@@ -162,7 +152,6 @@ export interface FileRouteTypes {
     | '/more'
     | '/orders'
     | '/store'
-    | '/track'
     | '/wallet'
     | '/worker'
     | '/booking/nursing'
@@ -177,7 +166,6 @@ export interface FileRouteTypes {
     | '/more'
     | '/orders'
     | '/store'
-    | '/track'
     | '/wallet'
     | '/worker'
     | '/booking/nursing'
@@ -193,7 +181,6 @@ export interface RootRouteChildren {
   MoreRoute: typeof MoreRoute
   OrdersRoute: typeof OrdersRoute
   StoreRoute: typeof StoreRoute
-  TrackRoute: typeof TrackRoute
   WalletRoute: typeof WalletRoute
   WorkerRoute: typeof WorkerRoute
   BookingNursingRoute: typeof BookingNursingRoute
@@ -264,13 +251,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/track': {
-      id: '/track'
-      path: '/track'
-      fullPath: '/track'
-      preLoaderRoute: typeof TrackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/wallet': {
       id: '/wallet'
       path: '/wallet'
@@ -305,7 +285,6 @@ const rootRouteChildren: RootRouteChildren = {
   MoreRoute: MoreRoute,
   OrdersRoute: OrdersRoute,
   StoreRoute: StoreRoute,
-  TrackRoute: TrackRoute,
   WalletRoute: WalletRoute,
   WorkerRoute: WorkerRoute,
   BookingNursingRoute: BookingNursingRoute,
