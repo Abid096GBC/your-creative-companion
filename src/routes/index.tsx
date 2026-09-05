@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BadgeCheck,
   Camera,
@@ -13,9 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { ServiceWizard } from "@/components/ServiceWizard";
-import { StoreSection } from "@/components/StoreSection";
 import { AnimatedIcon } from "@/components/AnimatedIcon";
+import { toNursingService } from "@/lib/booking-links";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
 import { LocationPicker } from "@/components/home/LocationPicker";
 import { HomeSearch } from "@/components/home/HomeSearch";
@@ -97,11 +96,11 @@ function Home() {
                 সাথে সাথেই ট্র্যাকিং আইডি পান।
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <ServiceWizard serviceId="injection">
-                  <Button variant="hero" size="lg">
+                <Button asChild variant="hero" size="lg" className="min-h-12">
+                  <Link to="/booking/nursing" search={{ service: "injection" }}>
                     <Syringe /> ইনজেকশন পুশ বুক করুন
-                  </Button>
-                </ServiceWizard>
+                  </Link>
+                </Button>
                 <Button asChild variant="whatsapp" size="lg">
                   <a href={waLink("Hello Shushrusha, I would like to book a service.")} target="_blank" rel="noopener noreferrer">
                     <MessageCircle /> WhatsApp Chat
@@ -140,11 +139,11 @@ function Home() {
                 <p className="mt-4 text-xl font-bold text-primary">{s.price}</p>
                 {s.priceNote && <p className="mt-1 text-xs text-muted-foreground">{s.priceNote}</p>}
                 <div className="mt-5">
-                  <ServiceWizard serviceId={s.id}>
-                    <Button variant={s.id === "injection" ? "hero" : "softOutline"} className="w-full">
+                  <Button asChild variant={s.id === "injection" ? "hero" : "softOutline"} className="min-h-11 w-full">
+                    <Link to="/booking/nursing" search={{ service: toNursingService(s.id) }}>
                       বুক করুন
-                    </Button>
-                  </ServiceWizard>
+                    </Link>
+                  </Button>
                 </div>
               </article>
             ))}
@@ -166,19 +165,28 @@ function Home() {
                       <p className="mt-1 text-sm font-semibold text-primary">{s.price}</p>
                     </div>
                   </div>
-                  <ServiceWizard serviceId={s.id}>
-                    <Button variant="softOutline">
-                      {s.id === "translator" ? "ফ্রি রিকোয়েস্ট করুন" : "বুক করুন"}
+                  {s.id === "translator" ? (
+                    <Button asChild variant="softOutline" className="min-h-11">
+                      <a
+                        href={waLink("Hello Shushrusha, I need free prescription translation help.")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        ফ্রি রিকোয়েস্ট করুন
+                      </a>
                     </Button>
-                  </ServiceWizard>
+                  ) : (
+                    <Button asChild variant="softOutline" className="min-h-11">
+                      <Link to="/booking/nursing" search={{ service: toNursingService(s.id) }}>
+                        বুক করুন
+                      </Link>
+                    </Button>
+                  )}
                 </article>
               ))}
             </div>
           )}
         </section>
-
-        {/* Store */}
-        <StoreSection />
 
         {/* Free prescription guidance */}
         <section id="packages" className="mx-auto max-w-6xl px-4 py-16">
@@ -202,11 +210,9 @@ function Home() {
                     <Camera /> প্রেসক্রিপশন পাঠান (WhatsApp)
                   </a>
                 </Button>
-                <ServiceWizard serviceId="translator">
-                  <Button variant="softOutline" size="lg">
-                    ট্রান্সলেটর টিকিট তৈরি করুন
-                  </Button>
-                </ServiceWizard>
+                <Button asChild variant="softOutline" size="lg" className="min-h-12">
+                  <Link to="/store">মেডিকেল স্টোর দেখুন</Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -245,11 +251,11 @@ function Home() {
                   <Phone /> {SITE.phoneDisplay}
                 </a>
               </Button>
-              <ServiceWizard serviceId="injection">
-                <Button variant="softOutline" size="lg">
+              <Button asChild variant="softOutline" size="lg" className="min-h-12">
+                <Link to="/booking/nursing" search={{ service: "injection" }}>
                   <Check /> ইনজেকশন পুশ রিকোয়েস্ট
-                </Button>
-              </ServiceWizard>
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
