@@ -2,6 +2,14 @@ import { Link } from "@tanstack/react-router";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import { toNursingService } from "@/lib/booking-links";
 import { waLink } from "@/lib/site";
+import {
+  newTrackingId,
+  saveOrder,
+  savedLocation,
+  type OrderCategory,
+} from "@/lib/orders-store";
+import { loadProfile } from "@/lib/account-store";
+import { toast } from "sonner";
 
 export type CategoryAction =
   | { type: "wizard"; serviceId: string }
@@ -15,6 +23,8 @@ export type CategoryItem = {
   nameEn: string;
   sub?: string;
   action: CategoryAction;
+  /** When set, tapping an enquiry also records it in the unified order list. */
+  logCategory?: OrderCategory;
 };
 
 export function SpecialtyCard({ item }: { item: CategoryItem }) {
@@ -44,8 +54,32 @@ export function SpecialtyCard({ item }: { item: CategoryItem }) {
   }
 
   if (item.action.type === "wa") {
+    const logEnquiry = () => {
+      if (!item.logCategory) return;
+      saveOrder({
+        id: newTrackingId(),
+        category: item.logCategory,
+        serviceName: `${item.name} (${item.nameEn})`,
+        date: new Date().toISOString().slice(0, 10),
+        slot: "টিম কল করে সময় নিশ্চিত করবে",
+        status: "Pending",
+        patientName: loadProfile().name,
+        patientRelation: "Self",
+        address: savedLocation(),
+        payment: "সার্ভিসের সময় পেমেন্ট",
+        amount: 0,
+        createdAt: new Date().toISOString(),
+      });
+      toast.success("এনকোয়ারি সেভ হয়েছে — 'অর্ডার' পেজে দেখুন");
+    };
     return (
-      <a href={waLink(item.action.message)} target="_blank" rel="noopener noreferrer" className={cls}>
+      <a
+        href={waLink(item.action.message)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={logEnquiry}
+        className={cls}
+      >
         {inner}
       </a>
     );

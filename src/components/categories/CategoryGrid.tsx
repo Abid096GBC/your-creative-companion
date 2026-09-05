@@ -89,6 +89,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         name: "জেনারেল ফিজিশিয়ান",
         nameEn: "General Physician",
         action: { type: "wa", message: "Hello Shushrusha, I need a General Physician consultation." },
+        logCategory: "doctor" as const,
       },
       {
         id: "cardio",
@@ -96,6 +97,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         name: "কার্ডিওলজিস্ট",
         nameEn: "Cardiologist",
         action: { type: "wa", message: "Hello Shushrusha, I need a Cardiologist appointment." },
+        logCategory: "doctor" as const,
       },
       {
         id: "neuro",
@@ -103,6 +105,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         name: "নিউরোলজিস্ট",
         nameEn: "Neurologist",
         action: { type: "wa", message: "Hello Shushrusha, I need a Neurologist appointment." },
+        logCategory: "doctor" as const,
       },
       {
         id: "pedia",
@@ -110,6 +113,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         name: "শিশু বিশেষজ্ঞ",
         nameEn: "Pediatrician",
         action: { type: "wa", message: "Hello Shushrusha, I need a Pediatrician appointment." },
+        logCategory: "doctor" as const,
       },
       {
         id: "gyn",
@@ -117,6 +121,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         name: "গাইনোকোলজিস্ট",
         nameEn: "Gynecologist",
         action: { type: "wa", message: "Hello Shushrusha, I need a Gynecologist appointment." },
+        logCategory: "doctor" as const,
       },
       {
         id: "diabeto",
@@ -124,6 +129,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         name: "ডায়াবেটোলজিস্ট",
         nameEn: "Diabetologist",
         action: { type: "wa", message: "Hello Shushrusha, I need a Diabetologist appointment." },
+        logCategory: "doctor" as const,
       },
     ],
   },
@@ -140,6 +146,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         nameEn: "Full Body Checkup",
         sub: "হোম স্যাম্পল কালেকশন",
         action: { type: "wa", message: "Hello Shushrusha, I want to book a Full Body Checkup with home sample collection." },
+        logCategory: "lab" as const,
       },
       {
         id: "diabetes",
@@ -148,6 +155,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         nameEn: "Diabetes Profile",
         sub: "FBS, 2hABF, HbA1c",
         action: { type: "wa", message: "Hello Shushrusha, I want to book the Diabetes Profile lab package." },
+        logCategory: "lab" as const,
       },
       {
         id: "cardiac",
@@ -156,6 +164,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         nameEn: "Cardiac Profile",
         sub: "লিপিড প্রোফাইল, ECG সাপোর্ট",
         action: { type: "wa", message: "Hello Shushrusha, I want to book the Cardiac Profile lab package." },
+        logCategory: "lab" as const,
       },
       {
         id: "kidney-liver",
@@ -164,6 +173,7 @@ export const CATEGORY_SECTIONS: CategorySection[] = [
         nameEn: "Kidney & Liver Tests",
         sub: "S. Creatinine, SGPT, SGOT",
         action: { type: "wa", message: "Hello Shushrusha, I want to book Kidney & Liver function tests at home." },
+        logCategory: "lab" as const,
       },
     ],
   },

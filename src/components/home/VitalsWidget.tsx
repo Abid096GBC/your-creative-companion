@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Link } from "@tanstack/react-router";
+import { readLocal, writeLocal } from "@/lib/local-storage";
 
 const KEY = "shushrusha_vitals";
 
@@ -48,7 +49,7 @@ export function VitalsWidget() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const raw = localStorage.getItem(KEY);
+    const raw = readLocal(KEY);
     if (raw) {
       try {
         const parsed = { ...EMPTY, ...JSON.parse(raw) } as Vitals;
@@ -62,7 +63,7 @@ export function VitalsWidget() {
   }, []);
 
   function save() {
-    localStorage.setItem(KEY, JSON.stringify(draft));
+    writeLocal(KEY, JSON.stringify(draft));
     setV(draft);
     setOpen(false);
   }
