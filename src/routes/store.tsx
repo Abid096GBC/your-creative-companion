@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { listStore, placeStoreOrder, validatePromo } from "@/lib/customer.functions";
 import { netPrice, type CatalogRow } from "@/lib/booking-types";
 import { BILLING_NOTE } from "@/lib/site";
+import { saveOrder } from "@/lib/orders-store";
 
 export const Route = createFileRoute("/store")({
   head: () => ({
@@ -99,6 +100,20 @@ function StorePage() {
           items: lines.map((l) => ({ id: l.item.id, qty: l.qty })),
         },
       });
+      saveOrder({
+        id: res.trackingId,
+        category: "store",
+        serviceName: lines.map((l) => `${l.item.name} ×${l.qty}`).join(", "),
+        date: new Date().toISOString().slice(0, 10),
+        slot: "ডেলিভারি টিম সময় জানাবে",
+        status: "Pending",
+        patientName: form.name.trim(),
+        patientRelation: "Self",
+        address: form.address.trim(),
+        payment: pay === "Cash" ? "ক্যাশ অন ডেলিভারি" : "bKash",
+        amount: total,
+        createdAt: new Date().toISOString(),
+      });
       setDone(res.trackingId);
       setCart({});
     } catch {
@@ -123,7 +138,7 @@ function StorePage() {
             <h2 className="mt-4 text-xl font-bold text-foreground">অর্ডার সফল হয়েছে!</h2>
             <p className="mt-3 text-2xl font-bold text-primary">#{done}</p>
             <Button asChild className="mt-6 w-full" variant="hero">
-              <Link to="/track">অর্ডার ট্র্যাক করুন</Link>
+              <Link to="/orders">অর্ডার ট্র্যাক করুন</Link>
             </Button>
           </div>
         ) : (

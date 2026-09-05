@@ -5,9 +5,10 @@ import { WhatsAppFab } from "@/components/WhatsAppFab";
 import { NursingBookingWizard } from "@/components/booking/NursingBookingWizard";
 
 export const Route = createFileRoute("/booking/nursing")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    service: typeof search["service"] === "string" ? (search["service"] as string) : "",
-  }),
+  validateSearch: (search: Record<string, unknown>): { service?: string } =>
+    typeof search["service"] === "string" && search["service"]
+      ? { service: search["service"] as string }
+      : {},
   head: () => ({
     meta: [
       { title: "হোম নার্সিং বুকিং | শুশ্রূষা" },

@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { UserProfileCard } from "@/components/more/UserProfileCard";
 import { WalletBanner } from "@/components/more/WalletBanner";
+import { readLocal } from "@/lib/local-storage";
 import { PatientSelectorModal } from "@/components/booking/PatientSelectorModal";
 import { loadPatients, removePatient, type Patient } from "@/lib/orders-store";
 import { loadReferral } from "@/lib/account-store";
@@ -266,7 +267,7 @@ function VitalsDialog({ open, onClose }: { open: boolean; onClose: () => void })
   useEffect(() => {
     if (!open) return;
     try {
-      const raw = localStorage.getItem("shushrusha:vitals");
+      const raw = readLocal("shushrusha_vitals");
       setV(raw ? (JSON.parse(raw) as Record<string, string>) : null);
     } catch {
       setV(null);

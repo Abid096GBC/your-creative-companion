@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PackageSearch, Plus } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
@@ -10,7 +10,7 @@ import { OrderTabs } from "@/components/orders/OrderTabs";
 import { NurseTrackerModal } from "@/components/orders/NurseTrackerModal";
 import {
   ACTIVE_STATUSES,
-  loadOrders,
+  useOrders,
   type LocalOrder,
   type OrderCategory,
 } from "@/lib/orders-store";
@@ -35,17 +35,10 @@ export const Route = createFileRoute("/orders")({
 
 function OrdersPage() {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<LocalOrder[]>([]);
+  const orders = useOrders();
   const [cat, setCat] = useState<OrderCategory>("nursing");
   const [view, setView] = useState<"active" | "past">("active");
   const [tracking, setTracking] = useState<LocalOrder | null>(null);
-
-  useEffect(() => {
-    const sync = () => setOrders(loadOrders());
-    sync();
-    window.addEventListener("shushrusha:store", sync);
-    return () => window.removeEventListener("shushrusha:store", sync);
-  }, []);
 
   const counts = useMemo(() => {
     const base: Record<OrderCategory, number> = { nursing: 0, doctor: 0, lab: 0, store: 0 };

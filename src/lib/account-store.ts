@@ -22,17 +22,19 @@ export type CareerApplication = {
   createdAt: string;
 };
 
+import { readLocalJSON } from "@/lib/local-storage";
+
 export type GamerState = {
   points: number;
   streak: number;
   lastPlayed: string; // yyyy-mm-dd
 };
 
-const PROFILE_KEY = "shushrusha:profile";
-const WALLET_KEY = "shushrusha:wallet";
-const GAMER_KEY = "shushrusha:gamer";
-const REFERRAL_KEY = "shushrusha:referral";
-const CAREER_KEY = "shushrusha:career";
+const PROFILE_KEY = "shushrusha_profile";
+const WALLET_KEY = "shushrusha_wallet";
+const GAMER_KEY = "shushrusha_gamer";
+const REFERRAL_KEY = "shushrusha_referral";
+const CAREER_KEY = "shushrusha_career";
 
 const EVENT = "shushrusha:account";
 
@@ -41,13 +43,7 @@ function emit() {
 }
 
 function readJson<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+  return readLocalJSON<T>(key, fallback);
 }
 
 function writeJson<T>(key: string, value: T) {

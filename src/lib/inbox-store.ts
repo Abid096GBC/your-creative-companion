@@ -1,3 +1,4 @@
+import { readLocalJSON } from "@/lib/local-storage";
 /** Local-first inbox store: promotions, notifications, read state & nurse chat (localStorage). */
 import { useEffect, useState } from "react";
 
@@ -111,18 +112,12 @@ export const NOTIFICATIONS: InboxNotification[] = [
   },
 ];
 
-const READ_KEY = "shushrusha:inbox-read";
-const CHAT_PREFIX = "shushrusha:chat:";
+const READ_KEY = "shushrusha_inbox_read";
+const CHAT_PREFIX = "shushrusha_chat_";
 const EVENT = "shushrusha:inbox";
 
 function readJson<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+  return readLocalJSON<T>(key, fallback);
 }
 
 function emit() {
