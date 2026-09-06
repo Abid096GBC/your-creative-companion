@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           address: string
@@ -27,6 +45,7 @@ export type Database = {
           notes: string | null
           nurse_id: string | null
           nurse_share: number | null
+          paid_at: string | null
           payment_method: string | null
           payment_status: string
           phone: string
@@ -43,6 +62,7 @@ export type Database = {
           time_slot: string | null
           total: number | null
           tracking_id: string
+          trx_id: string | null
           updated_at: string
         }
         Insert: {
@@ -57,6 +77,7 @@ export type Database = {
           notes?: string | null
           nurse_id?: string | null
           nurse_share?: number | null
+          paid_at?: string | null
           payment_method?: string | null
           payment_status?: string
           phone: string
@@ -73,6 +94,7 @@ export type Database = {
           time_slot?: string | null
           total?: number | null
           tracking_id: string
+          trx_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -87,6 +109,7 @@ export type Database = {
           notes?: string | null
           nurse_id?: string | null
           nurse_share?: number | null
+          paid_at?: string | null
           payment_method?: string | null
           payment_status?: string
           phone?: string
@@ -103,6 +126,7 @@ export type Database = {
           time_slot?: string | null
           total?: number | null
           tracking_id?: string
+          trx_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -163,6 +187,261 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          photo: string | null
+          sender: string
+          sender_name: string
+          text: string
+          thread_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo?: string | null
+          sender?: string
+          sender_name?: string
+          text?: string
+          thread_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo?: string | null
+          sender?: string
+          sender_name?: string
+          text?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          last_at: string
+          last_message: string
+          nurse_id: string | null
+          nurse_name: string
+          nurse_role: string
+          patient_name: string
+          patient_phone: string
+          service: string
+          tracking_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_at?: string
+          last_message?: string
+          nurse_id?: string | null
+          nurse_name?: string
+          nurse_role?: string
+          patient_name?: string
+          patient_phone?: string
+          service?: string
+          tracking_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_at?: string
+          last_message?: string
+          nurse_id?: string | null
+          nurse_name?: string
+          nurse_role?: string
+          patient_name?: string
+          patient_phone?: string
+          service?: string
+          tracking_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_threads_nurse_id_fkey"
+            columns: ["nurse_id"]
+            isOneToOne: false
+            referencedRelation: "nurses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_reviews: {
+        Row: {
+          comment: string
+          created_at: string
+          doctor_id: string
+          id: string
+          patient_name: string
+          rating: number
+        }
+        Insert: {
+          comment?: string
+          created_at?: string
+          doctor_id: string
+          id?: string
+          patient_name?: string
+          rating?: number
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          doctor_id?: string
+          id?: string
+          patient_name?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_reviews_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctors: {
+        Row: {
+          active: boolean
+          available_slots: string
+          chamber_address: string
+          consultation_fee: number
+          created_at: string
+          degrees: string
+          id: string
+          name: string
+          name_en: string
+          photo_url: string | null
+          rating: number
+          rating_count: number
+          specialty: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          available_slots?: string
+          chamber_address?: string
+          consultation_fee?: number
+          created_at?: string
+          degrees?: string
+          id?: string
+          name: string
+          name_en?: string
+          photo_url?: string | null
+          rating?: number
+          rating_count?: number
+          specialty: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          available_slots?: string
+          chamber_address?: string
+          consultation_fee?: number
+          created_at?: string
+          degrees?: string
+          id?: string
+          name?: string
+          name_en?: string
+          photo_url?: string | null
+          rating?: number
+          rating_count?: number
+          specialty?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hero_banners: {
+        Row: {
+          active: boolean
+          created_at: string
+          discount_text: string
+          id: string
+          image_url: string | null
+          link_url: string | null
+          sort_order: number
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          discount_text?: string
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          sort_order?: number
+          subtitle?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          discount_text?: string
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          sort_order?: number
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lab_tests: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          instructions: string
+          name: string
+          name_en: string
+          partner: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          instructions?: string
+          name: string
+          name_en?: string
+          partner?: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          instructions?: string
+          name?: string
+          name_en?: string
+          partner?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string
@@ -192,6 +471,62 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      nurse_applications: {
+        Row: {
+          area: string
+          created_at: string
+          email: string
+          experience: string
+          id: string
+          name: string
+          note: string
+          nurse_id: string | null
+          phone: string
+          qualification: string
+          status: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          area?: string
+          created_at?: string
+          email?: string
+          experience?: string
+          id?: string
+          name: string
+          note?: string
+          nurse_id?: string | null
+          phone: string
+          qualification?: string
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          email?: string
+          experience?: string
+          id?: string
+          name?: string
+          note?: string
+          nurse_id?: string | null
+          phone?: string
+          qualification?: string
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nurse_applications_nurse_id_fkey"
+            columns: ["nurse_id"]
+            isOneToOne: false
+            referencedRelation: "nurses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nurses: {
         Row: {
@@ -283,6 +618,45 @@ export type Database = {
           usage_limit?: number | null
           used_count?: number
           value?: number
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          description: string
+          id: string
+          name: string
+          name_en: string
+          price: number
+          service_key: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          name_en?: string
+          price?: number
+          service_key: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          name_en?: string
+          price?: number
+          service_key?: string
+          updated_at?: string
         }
         Relationships: []
       }
