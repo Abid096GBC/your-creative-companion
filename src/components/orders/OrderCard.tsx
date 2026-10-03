@@ -1,5 +1,6 @@
 import { CalendarDays, Download, MapPin, Navigation, RefreshCw, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PaidBadge } from "@/components/payment/BkashCheckout";
 import {
   ACTIVE_STATUSES,
   CATEGORY_LABEL,
@@ -51,6 +52,7 @@ export function OrderCard({
           </p>
         )}
         <p className="pt-1 text-base font-bold text-primary">৳{order.amount}</p>
+        {order.paymentStatus === "Paid" && <PaidBadge trxId={order.trxId} />}
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">

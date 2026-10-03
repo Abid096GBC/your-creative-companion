@@ -39,6 +39,9 @@ export type LocalOrder = {
   payment: string;
   amount: number;
   nurse?: NurseInfo;
+  paymentStatus?: "Paid" | "Unpaid";
+  paymentMethod?: string;
+  trxId?: string;
   createdAt: string;
 };
 
