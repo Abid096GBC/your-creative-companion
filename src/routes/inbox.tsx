@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
 import { PromotionList } from "@/components/inbox/PromotionList";
 import { NotificationList } from "@/components/inbox/NotificationList";
+import { PatientOrderChats } from "@/components/chat/PatientOrderChats";
 import { useUnreadInbox } from "@/lib/inbox-store";
 
 export const Route = createFileRoute("/inbox")({
@@ -73,7 +74,7 @@ function InboxPage() {
           </button>
         </div>
 
-        <div className="mt-5">{tab === "promo" ? <PromotionList /> : <NotificationList />}</div>
+        <div className="mt-5">{tab === "promo" ? <PromotionList /> : <><PatientOrderChats /><NotificationList /></>}</div>
       </main>
       <Footer />
       <WhatsAppFab />
