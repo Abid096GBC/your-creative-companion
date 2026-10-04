@@ -399,6 +399,25 @@ function WorkerPage() {
           )}
         </>
       )}
+      <Sheet open={Boolean(chatFor)} onOpenChange={(v) => !v && setChatFor(null)}>
+        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+          <SheetHeader className="border-b border-border p-4 text-left">
+            <SheetTitle className="text-base">{chatFor?.customer_name || "রোগী"}</SheetTitle>
+            <p className="text-xs text-muted-foreground">অর্ডার #{chatFor?.tracking_id} • {chatFor?.service}</p>
+          </SheetHeader>
+          <div className="min-h-0 flex-1">
+            <MonitoredChat
+              threadId={threadId}
+              me="nurse"
+              templates={["আমি রওনা দিয়েছি 🚗", "লোকেশনে পৌঁছেছি 📍", "সার্ভিস সম্পন্ন হয়েছে ✅"]}
+              onSend={async (m) => {
+                if (!chatFor) return;
+                await sendFn({ data: { code, pin, trackingId: chatFor.tracking_id, ...m } });
+              }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
