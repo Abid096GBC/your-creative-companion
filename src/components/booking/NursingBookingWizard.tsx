@@ -17,6 +17,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fileToCompressedDataUrl } from "@/lib/image-compress";
 import { CONVENIENCE_FEE } from "@/lib/site";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { createBooking } from "@/lib/bookings.functions";
+import { recordBkashPayment } from "@/lib/catalog.functions";
+import { loadProfile } from "@/lib/account-store";
+import type { InjectionItem } from "@/lib/injections";
+import { BkashCheckout, BkashOption } from "@/components/payment/BkashCheckout";
+import { BODY_PARTS, BodyPartSelector, DoseScheduler, MedicineSearch, StitchCounter, type Dose } from "@/components/booking/ServiceExtras";
 import { PatientSelectorModal } from "@/components/booking/PatientSelectorModal";
 import { toNursingService } from "@/lib/booking-links";
 import {
@@ -31,7 +40,7 @@ import {
 
 type Item = { id: string; title: string; en: string; price: number; duration: string };
 
-const SERVICES: Item[] = [
+const BASE_SERVICES: Item[] = [
   { id: "dressing", title: "ড্রেসিং", en: "Wound Dressing", price: 300, duration: "≈ ৩০ মিনিট" },
   { id: "injection", title: "ইনজেকশন / ক্যানুলা", en: "Injection / Cannula", price: 300, duration: "≈ ২০ মিনিট" },
   { id: "postop", title: "পোস্ট-সার্জারি কেয়ার", en: "Post-Surgery Care", price: 800, duration: "≈ ১ ঘন্টা" },
@@ -64,7 +73,16 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [prescription, setPrescription] = useState("");
-  const [payment, setPayment] = useState<"cash" | "wallet">("cash");
+  const [payment, setPayment] = useState<"cash" | "wallet" | "bkash">("cash");
+  const [services, setServices] = useState<Item[]>(BASE_SERVICES);
+  const [medicine, setMedicine] = useState<InjectionItem | null>(null);
+  const [doses, setDoses] = useState<Dose[]>([{ date: "", slot: "" }]);
+  const [bodyPart, setBodyPart] = useState("");
+  const [stitches, setStitches] = useState(0);
+  const [bkashOpen, setBkashOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const book = useServerFn(createBooking);
+  const recordPay = useServerFn(recordBkashPayment);
   const [promo, setPromo] = useState("");
   const [applied, setApplied] = useState(0);
   const [promoMsg, setPromoMsg] = useState("");
@@ -72,10 +90,24 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   useEffect(() => {
     setPatients(loadPatients());
     setAddress(savedLocation());
+    // Admin-managed prices override the defaults.
+    void supabase
+      .from("services")
+      .select("service_key, price")
+      .then(({ data }) => {
+        if (!data?.length) return;
+        const map = new Map(data.map((r) => [r.service_key === "dressing" ? "dressing" : r.service_key, Number(r.price)]));
+        setServices(BASE_SERVICES.map((s) => (map.has(s.id) ? { ...s, price: map.get(s.id)! } : s)));
+      });
   }, []);
 
-  const chosen = useMemo(() => SERVICES.filter((s) => picked.includes(s.id)), [picked]);
-  const serviceTotal = chosen.reduce((n, s) => n + s.price, 0);
+  const chosen = useMemo(() => services.filter((s) => picked.includes(s.id)), [picked, services]);
+  const hasInjection = picked.includes("injection");
+  const hasWound = picked.includes("dressing") || picked.includes("suturing");
+  const doseCount = hasInjection ? doses.length : 1;
+  const linePrice = (s: Item) =>
+    s.id === "injection" ? (s.price + (medicine?.price ?? 0)) * doseCount : s.price;
+  const serviceTotal = chosen.reduce((n, s) => n + linePrice(s), 0);
   const walletDiscount = payment === "wallet" ? Math.round(serviceTotal * 0.05) : 0;
   const total = Math.max(0, serviceTotal + CONVENIENCE_FEE - walletDiscount - applied);
   const patient = patients.find((p) => p.id === patientId);
@@ -83,7 +115,10 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const canNext = [
     picked.length > 0,
     Boolean(patientId),
-    Boolean(date && slot && address.trim()),
+    Boolean(
+      address.trim() &&
+        (hasInjection ? doses.every((d) => d.date && d.slot) : date && slot),
+    ),
     true,
     true,
   ][step];
@@ -111,21 +146,57 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
     setPrescription(await fileToCompressedDataUrl(file));
   }
 
-  function confirm() {
+  async function confirm(trxId?: string) {
     if (!patient) return;
+    setBusy(true);
+    const profile = loadProfile();
+    const slotLabel = (id: string) => SLOTS.find((s) => s.id === id)?.label ?? id;
+    const firstDate = hasInjection ? doses[0]?.date ?? "" : date;
+    const firstSlot = hasInjection ? doses[0]?.slot ?? "" : slot;
+    const extras = [
+      medicine ? `ওষুধ: ${medicine.brand} ${medicine.strength}` : "",
+      hasInjection && doses.length > 1 ? `ডোজ: ${doses.map((d) => `${d.date} ${slotLabel(d.slot)}`).join("; ")}` : "",
+      bodyPart ? `অংশ: ${BODY_PARTS.find((b) => b.id === bodyPart)?.label}` : "",
+      stitches ? `সেলাই: ${stitches}` : "",
+    ].filter(Boolean);
+    let trackingId = newTrackingId();
+    try {
+      const res = await book({
+        data: {
+          service: chosen.map((s) => s.en).join(", "),
+          customer_name: patient.name,
+          phone: profile.phone || "01000000000",
+          address,
+          details: { relation: patient.relation, extras: extras.join(" | ") },
+          ...(bodyPart ? { body_region: bodyPart } : {}),
+          ...(stitches ? { stitch_count: stitches } : {}),
+          amount: serviceTotal + CONVENIENCE_FEE,
+          discount: walletDiscount + applied,
+          notes: [notes, ...extras].filter(Boolean).join("\n").slice(0, 600),
+          time_slot: `${firstDate} ${slotLabel(firstSlot)}`,
+          payment_method: payment === "bkash" ? "bKash" : "Cash",
+        },
+      });
+      trackingId = res.trackingId;
+      if (trxId) await recordPay({ data: { trackingId, trxId } });
+    } catch {
+      toast.error("সার্ভারে সেভ করা যায়নি — লোকালি সেভ হয়েছে");
+    }
+    setBusy(false);
     const order: LocalOrder = {
-      id: newTrackingId(),
+      id: trackingId,
       category: "nursing",
       serviceName: chosen.map((s) => s.title).join(", "),
-      date,
-      slot: SLOTS.find((s) => s.id === slot)?.label ?? slot,
+      date: firstDate,
+      slot: slotLabel(firstSlot) + (hasInjection && doses.length > 1 ? ` (+${doses.length - 1} ডোজ)` : ""),
       status: "Assigned",
       patientName: patient.name,
       patientRelation: patient.relation,
       address,
-      notes,
+      notes: [notes, ...extras].filter(Boolean).join("\n"),
       prescription,
-      payment: payment === "cash" ? "Cash on Service" : "Shushrusha Wallet",
+      payment: payment === "cash" ? "Cash on Service" : payment === "wallet" ? "Shushrusha Wallet" : "bKash PGW",
+      ...(trxId ? { paymentStatus: "Paid" as const, paymentMethod: "bKash PGW", trxId } : {}),
       amount: total,
       nurse: {
         name: "সুমাইয়া আক্তার",
@@ -160,7 +231,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
         {step === 0 && (
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-foreground">সার্ভিস নির্বাচন করুন</h2>
-            {SERVICES.map((s) => {
+            {services.map((s) => {
               const on = picked.includes(s.id);
               return (
                 <button
@@ -181,6 +252,21 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
                 </button>
               );
             })}
+            {hasInjection && (
+              <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                <Label>ইনজেকশনের ওষুধ (ঐচ্ছিক)</Label>
+                <MedicineSearch value={medicine} onChange={setMedicine} />
+                <p className="text-xs text-muted-foreground">ওষুধের দাম সার্ভিস চার্জের সাথে যোগ হবে। ডোজ সংখ্যা পরের ধাপে বেছে নিন।</p>
+              </div>
+            )}
+            {hasWound && (
+              <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                <Label>ক্ষতের স্থান নির্বাচন করুন</Label>
+                <BodyPartSelector value={bodyPart} onChange={setBodyPart} />
+                <Label className="block text-center">সেলাই সংখ্যা</Label>
+                <StitchCounter value={stitches} onChange={setStitches} />
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               কনভিনিয়েন্স / ট্রাভেল চার্জ ৳{CONVENIENCE_FEE} আলাদাভাবে যুক্ত হবে।
             </p>
@@ -236,6 +322,13 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
         {step === 2 && (
           <section className="space-y-4">
             <h2 className="text-lg font-bold text-foreground">তারিখ, সময় ও ঠিকানা</h2>
+            {hasInjection ? (
+              <div className="space-y-2">
+                <Label>ডোজ সংখ্যা ও প্রতিটি ডোজের সময়</Label>
+                <DoseScheduler doses={doses} onChange={setDoses} slots={SLOTS} />
+              </div>
+            ) : (
+            <>
             <div className="space-y-2">
               <Label htmlFor="b-date">তারিখ / Date</Label>
               <Input id="b-date" type="date" className="min-h-11" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -262,6 +355,8 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
                 ))}
               </div>
             </div>
+            </>
+            )}
             <div className="space-y-2">
               <Label htmlFor="b-addr">
                 <MapPin className="mr-1 inline size-4" /> সার্ভিস ঠিকানা
@@ -308,7 +403,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
               {chosen.map((s) => (
                 <div key={s.id} className="flex justify-between">
                   <span className="text-muted-foreground">{s.title}</span>
-                  <span className="font-medium text-foreground">৳{s.price}</span>
+                  <span className="font-medium text-foreground">৳{linePrice(s)}</span>
                 </div>
               ))}
               <div className="flex justify-between">
@@ -333,7 +428,8 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
               </div>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-3">
+              <BkashOption selected={payment === "bkash"} onClick={() => setPayment("bkash")} />
               {(
                 [
                   { id: "cash", label: "ক্যাশ অন সার্ভিস", icon: Stethoscope },
@@ -368,9 +464,24 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
             </div>
             {promoMsg && <p className="text-xs text-muted-foreground">{promoMsg}</p>}
 
-            <Button variant="hero" size="lg" className="min-h-12 w-full" onClick={confirm}>
-              বুকিং নিশ্চিত করুন • ৳{total}
+            <Button
+              variant="hero"
+              size="lg"
+              className="min-h-12 w-full"
+              disabled={busy}
+              onClick={() => (payment === "bkash" ? setBkashOpen(true) : void confirm())}
+            >
+              {payment === "bkash" ? "বিকাশে পেমেন্ট করুন" : "বুকিং নিশ্চিত করুন"} • ৳{total}
             </Button>
+            <BkashCheckout
+              open={bkashOpen}
+              amount={total}
+              onClose={() => setBkashOpen(false)}
+              onSuccess={(trx) => {
+                setBkashOpen(false);
+                void confirm(trx);
+              }}
+            />
           </section>
         )}
       </div>

@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { fileToCompressedDataUrl } from "@/lib/image-compress";
+import { useServerFn } from "@tanstack/react-start";
+import { submitApplication } from "@/lib/catalog.functions";
 import { saveApplication, type CareerApplication } from "@/lib/account-store";
 
 const ROLES = ["Senior B.Sc Nurse", "Diploma Nurse", "Caregiver", "Physiotherapist"];
@@ -25,6 +27,7 @@ export function NurseApplicationForm() {
   const [cvName, setCvName] = useState<string>();
   const [done, setDone] = useState(false);
 
+  const submitFn = useServerFn(submitApplication);
   const valid = name.trim().length > 1 && phone.trim().length > 8;
 
   function submit() {
@@ -43,6 +46,18 @@ export function NurseApplicationForm() {
       cvName,
       createdAt: new Date().toISOString(),
     });
+    void submitFn({
+      data: {
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        tier: role === "Caregiver" ? "caregiver" : "nurse",
+        qualification: role,
+        experience: `${experience} বছর`,
+        area: address.trim(),
+        note: `Gender: ${gender}${cvName ? `, CV: ${cvName}` : ""}`,
+      },
+    }).catch(() => undefined);
     setDone(true);
   }
 

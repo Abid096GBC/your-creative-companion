@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { workerAction, workerFeed } from "@/lib/worker.functions";
+import { nurseSendMessage, openChatThread } from "@/lib/catalog.functions";
+import { MonitoredChat } from "@/components/chat/MonitoredChat";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { MessagesSquare } from "lucide-react";
 import { TIER_LABEL, type BookingRow } from "@/lib/booking-types";
 
 export const Route = createFileRoute("/worker")({
@@ -134,6 +138,21 @@ function WorkerPage() {
   const openCount = useRef(0);
   const [scanFor, setScanFor] = useState<BookingRow | null>(null);
   const [scanMsg, setScanMsg] = useState("");
+  const openThread = useServerFn(openChatThread);
+  const sendFn = useServerFn(nurseSendMessage);
+  const [chatFor, setChatFor] = useState<BookingRow | null>(null);
+  const [threadId, setThreadId] = useState<string | null>(null);
+
+  async function startChat(b: BookingRow) {
+    setChatFor(b);
+    setThreadId(null);
+    try {
+      const t = await openThread({ data: { trackingId: b.tracking_id } });
+      setThreadId(t.id);
+    } catch {
+      setThreadId(null);
+    }
+  }
 
   const load = useCallback(
     async (c: string, p: string, silent = false) => {
@@ -336,6 +355,9 @@ function WorkerPage() {
                     <Button size="sm" variant="softOutline" onClick={() => void act(b, "payment", "Paid via bKash")}>
                       বিকাশে পেমেন্ট
                     </Button>
+                    <Button size="sm" variant="softOutline" onClick={() => void startChat(b)}>
+                      <MessagesSquare /> রোগীর সাথে চ্যাট
+                    </Button>
                     <Button size="sm" variant="hero" onClick={() => { setScanMsg(""); setScanFor(b); }}>
                       <QrCode /> QR স্ক্যান করে সম্পন্ন
                     </Button>
@@ -377,6 +399,25 @@ function WorkerPage() {
           )}
         </>
       )}
+      <Sheet open={Boolean(chatFor)} onOpenChange={(v) => !v && setChatFor(null)}>
+        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+          <SheetHeader className="border-b border-border p-4 text-left">
+            <SheetTitle className="text-base">{chatFor?.customer_name || "রোগী"}</SheetTitle>
+            <p className="text-xs text-muted-foreground">অর্ডার #{chatFor?.tracking_id} • {chatFor?.service}</p>
+          </SheetHeader>
+          <div className="min-h-0 flex-1">
+            <MonitoredChat
+              threadId={threadId}
+              me="nurse"
+              templates={["আমি রওনা দিয়েছি 🚗", "লোকেশনে পৌঁছেছি 📍", "সার্ভিস সম্পন্ন হয়েছে ✅"]}
+              onSend={async (m) => {
+                if (!chatFor) return;
+                await sendFn({ data: { code, pin, trackingId: chatFor.tracking_id, ...m } });
+              }}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
