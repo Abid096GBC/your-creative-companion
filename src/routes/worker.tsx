@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { workerAction, workerFeed } from "@/lib/worker.functions";
+import { nurseSendMessage, openChatThread } from "@/lib/catalog.functions";
+import { MonitoredChat } from "@/components/chat/MonitoredChat";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { MessagesSquare } from "lucide-react";
 import { TIER_LABEL, type BookingRow } from "@/lib/booking-types";
 
 export const Route = createFileRoute("/worker")({
@@ -134,6 +138,21 @@ function WorkerPage() {
   const openCount = useRef(0);
   const [scanFor, setScanFor] = useState<BookingRow | null>(null);
   const [scanMsg, setScanMsg] = useState("");
+  const openThread = useServerFn(openChatThread);
+  const sendFn = useServerFn(nurseSendMessage);
+  const [chatFor, setChatFor] = useState<BookingRow | null>(null);
+  const [threadId, setThreadId] = useState<string | null>(null);
+
+  async function startChat(b: BookingRow) {
+    setChatFor(b);
+    setThreadId(null);
+    try {
+      const t = await openThread({ data: { trackingId: b.tracking_id } });
+      setThreadId(t.id);
+    } catch {
+      setThreadId(null);
+    }
+  }
 
   const load = useCallback(
     async (c: string, p: string, silent = false) => {
@@ -335,6 +354,9 @@ function WorkerPage() {
                     </Button>
                     <Button size="sm" variant="softOutline" onClick={() => void act(b, "payment", "Paid via bKash")}>
                       বিকাশে পেমেন্ট
+                    </Button>
+                    <Button size="sm" variant="softOutline" onClick={() => void startChat(b)}>
+                      <MessagesSquare /> রোগীর সাথে চ্যাট
                     </Button>
                     <Button size="sm" variant="hero" onClick={() => { setScanMsg(""); setScanFor(b); }}>
                       <QrCode /> QR স্ক্যান করে সম্পন্ন
