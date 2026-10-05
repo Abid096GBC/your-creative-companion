@@ -14,6 +14,8 @@ import { listStore, placeStoreOrder, validatePromo } from "@/lib/customer.functi
 import { netPrice, type CatalogRow } from "@/lib/booking-types";
 import { BILLING_NOTE } from "@/lib/site";
 import { saveOrder } from "@/lib/orders-store";
+import { BkashCheckout, BkashOption } from "@/components/payment/BkashCheckout";
+import { recordBkashPayment } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/store")({
   head: () => ({
@@ -47,6 +49,8 @@ function StorePage() {
   const [promoMsg, setPromoMsg] = useState("");
   const [form, setForm] = useState({ name: "", phone: "", address: "" });
   const [pay, setPay] = useState<"Cash" | "bKash">("Cash");
+  const [bkashOpen, setBkashOpen] = useState(false);
+  const recordPay = useServerFn(recordBkashPayment);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState("");
@@ -83,10 +87,15 @@ function StorePage() {
     }
   }
 
-  async function checkout() {
+  function startCheckout() {
     if (!lines.length) return setError("কার্ট খালি");
     if (form.name.trim().length < 2 || form.phone.trim().length < 6 || form.address.trim().length < 4)
       return setError("নাম, ফোন ও ঠিকানা পূরণ করুন");
+    if (pay === "bKash") setBkashOpen(true);
+    else void checkout();
+  }
+
+  async function checkout(trxId?: string) {
     setBusy(true);
     setError("");
     try {
@@ -100,7 +109,9 @@ function StorePage() {
           items: lines.map((l) => ({ id: l.item.id, qty: l.qty })),
         },
       });
+      if (trxId) await recordPay({ data: { trackingId: res.trackingId, trxId } }).catch(() => undefined);
       saveOrder({
+        ...(trxId ? { paymentStatus: "Paid" as const, paymentMethod: "bKash PGW", trxId } : {}),
         id: res.trackingId,
         category: "store",
         serviceName: lines.map((l) => `${l.item.name} ×${l.qty}`).join(", "),
@@ -294,7 +305,8 @@ function StorePage() {
                 <Input placeholder="ফোন নম্বর" inputMode="tel" maxLength={20} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 <Input placeholder="ডেলিভারি ঠিকানা" maxLength={240} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
                 <div className="grid grid-cols-2 gap-2">
-                  {(["Cash", "bKash"] as const).map((m) => (
+                  <BkashOption selected={pay === "bKash"} onClick={() => setPay("bKash")} />
+                  {(["Cash"] as const).map((m) => (
                     <button
                       key={m}
                       type="button"
@@ -313,9 +325,18 @@ function StorePage() {
               <p className="mt-3 text-xs leading-relaxed" style={{ color: "#64748B" }}>
                 {BILLING_NOTE}
               </p>
-              <Button className="mt-3 w-full" variant="hero" disabled={busy} onClick={checkout}>
+              <Button className="mt-3 w-full" variant="hero" disabled={busy} onClick={startCheckout}>
                 {busy && <Loader2 className="animate-spin" />} অর্ডার কনফার্ম করুন
               </Button>
+              <BkashCheckout
+                open={bkashOpen}
+                amount={total}
+                onClose={() => setBkashOpen(false)}
+                onSuccess={(trx) => {
+                  setBkashOpen(false);
+                  void checkout(trx);
+                }}
+              />
               </SheetContent>
             </Sheet>
           </div>
