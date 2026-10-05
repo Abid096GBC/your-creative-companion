@@ -77,7 +77,7 @@ export function ServiceGrid() {
             {inner}
           </a>
         ) : (
-          <Link key={c.id} to="/store" className={cls}>
+          <Link key={c.id} to={c.href} className={cls}>
             {inner}
           </Link>
         );
