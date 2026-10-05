@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { FlaskConical, Package, Sparkles, Stethoscope, UserRound } from "lucide-react";
-import { waLink } from "@/lib/site";
 
 const CARDS = [
   {
@@ -9,8 +8,8 @@ const CARDS = [
     title: "Lab Tests",
     titleBn: "ল্যাব টেস্ট",
     sub: "Home Sample Collection",
-    href: waLink("Hello Shushrusha, I need a home lab test sample collection."),
-    external: true,
+    href: "/lab-tests",
+    external: false,
   },
   {
     id: "store",
@@ -46,10 +45,9 @@ export function ServiceGrid() {
       </Link>
 
       {/* Doctor consultation */}
-      <a
-        href={waLink("Hello Shushrusha, I would like a specialist doctor consultation.")}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        to="/doctors/$specialty"
+        params={{ specialty: "all" }}
         className="card-elevated flex min-h-11 min-w-0 flex-col items-start gap-2 p-5"
       >
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
@@ -60,7 +58,7 @@ export function ServiceGrid() {
         <span className="text-xs leading-relaxed text-muted-foreground">
           Specialist Doctor Appointments
         </span>
-      </a>
+      </Link>
 
       {CARDS.map((c) => {
         const inner = (
@@ -79,7 +77,7 @@ export function ServiceGrid() {
             {inner}
           </a>
         ) : (
-          <Link key={c.id} to="/store" className={cls}>
+          <Link key={c.id} to={c.href} className={cls}>
             {inner}
           </Link>
         );

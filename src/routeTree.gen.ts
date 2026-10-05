@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CareerRouteImport } from './routes/career'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as InboxRouteImport } from './routes/inbox'
+import { Route as LabTestsRouteImport } from './routes/lab-tests'
 import { Route as MedGamerRouteImport } from './routes/med-gamer'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as OrdersRouteImport } from './routes/orders'
@@ -21,6 +22,7 @@ import { Route as StoreRouteImport } from './routes/store'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as WorkerRouteImport } from './routes/worker'
 import { Route as BookingNursingRouteImport } from './routes/booking.nursing'
+import { Route as DoctorsSpecialtyRouteImport } from './routes/doctors.$specialty'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,6 +47,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const InboxRoute = InboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabTestsRoute = LabTestsRouteImport.update({
+  id: '/lab-tests',
+  path: '/lab-tests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MedGamerRoute = MedGamerRouteImport.update({
@@ -82,6 +89,11 @@ const BookingNursingRoute = BookingNursingRouteImport.update({
   path: '/booking/nursing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DoctorsSpecialtyRoute = DoctorsSpecialtyRouteImport.update({
+  id: '/doctors/$specialty',
+  path: '/doctors/$specialty',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/career': typeof CareerRoute
   '/categories': typeof CategoriesRoute
   '/inbox': typeof InboxRoute
+  '/lab-tests': typeof LabTestsRoute
   '/med-gamer': typeof MedGamerRoute
   '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
@@ -96,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
+  '/doctors/$specialty': typeof DoctorsSpecialtyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -103,6 +117,7 @@ export interface FileRoutesByTo {
   '/career': typeof CareerRoute
   '/categories': typeof CategoriesRoute
   '/inbox': typeof InboxRoute
+  '/lab-tests': typeof LabTestsRoute
   '/med-gamer': typeof MedGamerRoute
   '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
@@ -110,6 +125,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
+  '/doctors/$specialty': typeof DoctorsSpecialtyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -118,6 +134,7 @@ export interface FileRoutesById {
   '/career': typeof CareerRoute
   '/categories': typeof CategoriesRoute
   '/inbox': typeof InboxRoute
+  '/lab-tests': typeof LabTestsRoute
   '/med-gamer': typeof MedGamerRoute
   '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
@@ -125,6 +142,7 @@ export interface FileRoutesById {
   '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
+  '/doctors/$specialty': typeof DoctorsSpecialtyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -134,6 +152,7 @@ export interface FileRouteTypes {
     | '/career'
     | '/categories'
     | '/inbox'
+    | '/lab-tests'
     | '/med-gamer'
     | '/more'
     | '/orders'
@@ -141,6 +160,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/worker'
     | '/booking/nursing'
+    | '/doctors/$specialty'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -148,6 +168,7 @@ export interface FileRouteTypes {
     | '/career'
     | '/categories'
     | '/inbox'
+    | '/lab-tests'
     | '/med-gamer'
     | '/more'
     | '/orders'
@@ -155,6 +176,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/worker'
     | '/booking/nursing'
+    | '/doctors/$specialty'
   id:
     | '__root__'
     | '/'
@@ -162,6 +184,7 @@ export interface FileRouteTypes {
     | '/career'
     | '/categories'
     | '/inbox'
+    | '/lab-tests'
     | '/med-gamer'
     | '/more'
     | '/orders'
@@ -169,6 +192,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/worker'
     | '/booking/nursing'
+    | '/doctors/$specialty'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -177,6 +201,7 @@ export interface RootRouteChildren {
   CareerRoute: typeof CareerRoute
   CategoriesRoute: typeof CategoriesRoute
   InboxRoute: typeof InboxRoute
+  LabTestsRoute: typeof LabTestsRoute
   MedGamerRoute: typeof MedGamerRoute
   MoreRoute: typeof MoreRoute
   OrdersRoute: typeof OrdersRoute
@@ -184,6 +209,7 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WorkerRoute: typeof WorkerRoute
   BookingNursingRoute: typeof BookingNursingRoute
+  DoctorsSpecialtyRoute: typeof DoctorsSpecialtyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -221,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/inbox'
       fullPath: '/inbox'
       preLoaderRoute: typeof InboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab-tests': {
+      id: '/lab-tests'
+      path: '/lab-tests'
+      fullPath: '/lab-tests'
+      preLoaderRoute: typeof LabTestsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/med-gamer': {
@@ -272,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookingNursingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/doctors/$specialty': {
+      id: '/doctors/$specialty'
+      path: '/doctors/$specialty'
+      fullPath: '/doctors/$specialty'
+      preLoaderRoute: typeof DoctorsSpecialtyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -281,6 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   CareerRoute: CareerRoute,
   CategoriesRoute: CategoriesRoute,
   InboxRoute: InboxRoute,
+  LabTestsRoute: LabTestsRoute,
   MedGamerRoute: MedGamerRoute,
   MoreRoute: MoreRoute,
   OrdersRoute: OrdersRoute,
@@ -288,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WorkerRoute: WorkerRoute,
   BookingNursingRoute: BookingNursingRoute,
+  DoctorsSpecialtyRoute: DoctorsSpecialtyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
