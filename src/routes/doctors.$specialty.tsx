@@ -166,7 +166,10 @@ function RateDialog({ doctor, onClose, onSaved }: { doctor: Doctor | null; onClo
       .from("doctor_reviews")
       .insert({ doctor_id: doctor.id, rating, comment: comment.trim().slice(0, 500), patient_name: loadProfile().name });
     setBusy(false);
-    if (error) return toast.error("রিভিউ সেভ করা যায়নি");
+    if (error) {
+      toast.error("রিভিউ সেভ করা যায়নি");
+      return;
+    }
     toast.success("ধন্যবাদ! আপনার রেটিং যুক্ত হয়েছে");
     setComment("");
     onSaved();
