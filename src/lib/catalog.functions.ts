@@ -23,7 +23,7 @@ export const adminListCatalog = createServerFn({ method: "POST" })
     const db = await admin(data.password);
     const { data: rows, error } = await db.from(data.table).select("*").order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
-    return (rows ?? []) as unknown as Record<string, unknown>[];
+    return (rows ?? []) as unknown as Record<string, string | number | boolean | null>[];
   });
 
 export const adminSaveCatalog = createServerFn({ method: "POST" })

@@ -78,7 +78,7 @@ export function CatalogEditor({ password, table }: { password: string; table: Ca
   const [busy, setBusy] = useState(false);
 
   async function load() {
-    setRows(await list({ data: { password, table } }));
+    setRows((await list({ data: { password, table } })) as Row[]);
   }
   useEffect(() => {
     setEdit(null);
