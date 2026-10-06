@@ -24,6 +24,7 @@ import {
 import { adminMedGemma } from "@/lib/admin-extra.functions";
 import { StoreManager } from "@/components/admin/StoreManager";
 import { PromoManager } from "@/components/admin/PromoManager";
+import { PaidBadge } from "@/components/payment/BkashCheckout";
 import { CatalogEditor } from "@/components/admin/CatalogEditor";
 import { ApplicationsManager } from "@/components/admin/ApplicationsManager";
 import { BkashSettings, ChatMonitor } from "@/components/admin/ChatMonitor";
@@ -345,6 +346,7 @@ function AdminPage() {
                       </td>
                       <td className="px-4 py-3 text-xs">
                         <p className="font-medium text-foreground">{r.payment_status}</p>
+                        {r.payment_method === "bKash PGW" && r.payment_status === "Paid" && <PaidBadge trxId={(r as { trx_id?: string | null }).trx_id} />}
                         <p className="text-muted-foreground">
                           বিল: ৳{Number(r.amount ?? 0)} • নার্স ৳{Number(r.nurse_share ?? 0)} • প্ল্যাটফর্ম ৳
                           {Number(r.platform_share ?? 0)}
