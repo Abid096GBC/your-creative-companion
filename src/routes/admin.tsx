@@ -24,6 +24,9 @@ import {
 import { adminMedGemma } from "@/lib/admin-extra.functions";
 import { StoreManager } from "@/components/admin/StoreManager";
 import { PromoManager } from "@/components/admin/PromoManager";
+import { CatalogEditor } from "@/components/admin/CatalogEditor";
+import { ApplicationsManager } from "@/components/admin/ApplicationsManager";
+import { BkashSettings, ChatMonitor } from "@/components/admin/ChatMonitor";
 import {
   NURSE_STATUSES,
   PAYMENT_STATUSES,
@@ -62,6 +65,13 @@ const STATUS_STYLE: Record<string, string> = {
 const TABS = [
   { id: "bookings", label: "বুকিং ও ডিসপ্যাচ" },
   { id: "nurses", label: "নার্স ডেটাবেজ" },
+  { id: "applications", label: "আবেদন ও ক্রেডেনশিয়াল" },
+  { id: "chats", label: "লাইভ চ্যাট" },
+  { id: "banners", label: "হিরো ব্যানার" },
+  { id: "doctors", label: "ডাক্তার" },
+  { id: "labs", label: "ল্যাব টেস্ট" },
+  { id: "services", label: "সার্ভিস ও চার্জ" },
+  { id: "bkash", label: "বিকাশ" },
   { id: "pricing", label: "প্রোডাক্ট ও প্রাইসিং" },
   { id: "promo", label: "প্রমো ও কুপন" },
   { id: "medgemma", label: "MedGemma (মেডিকেল)" },
@@ -426,6 +436,16 @@ function AdminPage() {
             }}
           />
         )}
+
+        {tab === "applications" && (
+          <div className="mt-6"><ApplicationsManager password={password} onApproved={() => void load(password)} /></div>
+        )}
+        {tab === "chats" && <div className="mt-6"><ChatMonitor password={password} /></div>}
+        {tab === "banners" && <div className="mt-6"><CatalogEditor password={password} table="hero_banners" /></div>}
+        {tab === "doctors" && <div className="mt-6"><CatalogEditor password={password} table="doctors" /></div>}
+        {tab === "labs" && <div className="mt-6"><CatalogEditor password={password} table="lab_tests" /></div>}
+        {tab === "services" && <div className="mt-6"><CatalogEditor password={password} table="services" /></div>}
+        {tab === "bkash" && <div className="mt-6"><BkashSettings password={password} /></div>}
 
         {tab === "pricing" && (
           <div className="mt-6">
