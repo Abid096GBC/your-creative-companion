@@ -139,6 +139,51 @@ export type Database = {
           },
         ]
       }
+      cash_collections: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string
+          id: string
+          nurse_id: string | null
+          nurse_name: string
+          tracking_id: string
+        }
+        Insert: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          nurse_id?: string | null
+          nurse_name?: string
+          tracking_id?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          nurse_id?: string | null
+          nurse_name?: string
+          tracking_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_collections_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_collections_nurse_id_fkey"
+            columns: ["nurse_id"]
+            isOneToOne: false
+            referencedRelation: "nurses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       catalog_items: {
         Row: {
           active: boolean
@@ -528,16 +573,39 @@ export type Database = {
           },
         ]
       }
+      nurse_notices: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       nurses: {
         Row: {
           active: boolean
           area: string | null
           completed_visits: number
           created_at: string
+          email: string | null
           id: string
           login_pin: string
           name: string
           nurse_code: string
+          password_hash: string | null
           phone: string
           photo_url: string | null
           rating: number
@@ -551,10 +619,12 @@ export type Database = {
           area?: string | null
           completed_visits?: number
           created_at?: string
+          email?: string | null
           id?: string
           login_pin?: string
           name: string
           nurse_code: string
+          password_hash?: string | null
           phone: string
           photo_url?: string | null
           rating?: number
@@ -568,10 +638,12 @@ export type Database = {
           area?: string | null
           completed_visits?: number
           created_at?: string
+          email?: string | null
           id?: string
           login_pin?: string
           name?: string
           nurse_code?: string
+          password_hash?: string | null
           phone?: string
           photo_url?: string | null
           rating?: number
@@ -618,6 +690,54 @@ export type Database = {
           usage_limit?: number | null
           used_count?: number
           value?: number
+        }
+        Relationships: []
+      }
+      quiz_questions: {
+        Row: {
+          active: boolean
+          category: string
+          correct: string
+          created_at: string
+          id: string
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          penalty: number
+          question: string
+          reward: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          correct?: string
+          created_at?: string
+          id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          penalty?: number
+          question: string
+          reward?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          correct?: string
+          created_at?: string
+          id?: string
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          penalty?: number
+          question?: string
+          reward?: number
+          updated_at?: string
         }
         Relationships: []
       }
