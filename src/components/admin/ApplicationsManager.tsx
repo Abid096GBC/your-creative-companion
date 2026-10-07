@@ -18,6 +18,7 @@ export function ApplicationsManager({ password, onApproved }: { password: string
   const [target, setTarget] = useState<App | null>(null);
   const [code, setCode] = useState("");
   const [pin, setPin] = useState("");
+  const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -32,14 +33,15 @@ export function ApplicationsManager({ password, onApproved }: { password: string
     setTarget(a);
     setCode(`SH-${Math.floor(1000 + Math.random() * 9000)}`);
     setPin(String(Math.floor(100000 + Math.random() * 900000)));
+    setEmail(a.email ?? "");
   }
 
   async function doApprove() {
     if (!target) return;
     setBusy(true);
     try {
-      await approve({ data: { password, id: target.id, nurseCode: code, pin } });
-      toast.success(`অনুমোদিত! Nurse ID: ${code.toUpperCase()} • Password: ${pin}`);
+      await approve({ data: { password, id: target.id, nurseCode: code, pin, ...(email.trim() ? { email: email.trim() } : {}) } });
+      toast.success(`অনুমোদিত! লগইন: ${email.trim() || code.toUpperCase()} • Password: ${pin}`, { duration: 15000 });
       setTarget(null);
       await load();
       onApproved();
@@ -97,10 +99,14 @@ export function ApplicationsManager({ password, onApproved }: { password: string
               <Input className="min-h-11 uppercase" value={code} onChange={(e) => setCode(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label>Password / PIN</Label>
+              <Label>Email (লগইনের জন্য)</Label>
+              <Input className="min-h-11" type="email" placeholder="nurse@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Password</Label>
               <Input className="min-h-11" value={pin} onChange={(e) => setPin(e.target.value)} />
             </div>
-            <p className="text-xs text-muted-foreground">এই আইডি ও পাসওয়ার্ড নার্সকে জানান — তিনি নার্স ড্যাশবোর্ডে লগইন করবেন।</p>
+            <p className="text-xs text-muted-foreground">এই ইমেইল/আইডি ও পাসওয়ার্ড নার্সকে জানান — তিনি নার্স ড্যাশবোর্ডে লগইন করবেন।</p>
             <Button variant="hero" className="min-h-11 w-full" disabled={busy || code.length < 2 || pin.length < 4} onClick={() => void doApprove()}>
               {busy && <Loader2 className="animate-spin" />} অনুমোদন করুন
             </Button>
