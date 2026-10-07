@@ -26,3 +26,8 @@ export async function askGemini(system: string, user: string) {
   const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return json.choices?.[0]?.message?.content ?? "";
 }
+
+export async function hashPassword(pw: string) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`shushrusha:${pw}`));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}

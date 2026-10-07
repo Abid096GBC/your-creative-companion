@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, Loader2, LockKeyhole, QrCode, RefreshCw, Star, Wallet, X } from "lucide-react";
+import { Banknote, BadgeCheck, Loader2, LockKeyhole, Megaphone, QrCode, RefreshCw, Star, Wallet, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { workerAction, workerFeed } from "@/lib/worker.functions";
+import { workerAction, workerCollectCash, workerFeed, workerNotices } from "@/lib/worker.functions";
 import { nurseSendMessage, openChatThread } from "@/lib/catalog.functions";
 import { MonitoredChat } from "@/components/chat/MonitoredChat";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -142,6 +143,52 @@ function WorkerPage() {
   const sendFn = useServerFn(nurseSendMessage);
   const [chatFor, setChatFor] = useState<BookingRow | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
+  const cashFn = useServerFn(workerCollectCash);
+  const noticesFn = useServerFn(workerNotices);
+  const [view, setView] = useState<"jobs" | "news">("jobs");
+  const [notices, setNotices] = useState<Awaited<ReturnType<typeof workerNotices>>>([]);
+  const [cashScan, setCashScan] = useState(false);
+  const [cashQr, setCashQr] = useState("");
+  const [cashAmount, setCashAmount] = useState("");
+  const [feeAmount, setFeeAmount] = useState("");
+  const [feeNote, setFeeNote] = useState("");
+
+  useEffect(() => {
+    if (!feed || view !== "news") return;
+    void noticesFn({ data: { code, pin } }).then(setNotices).catch(() => setNotices([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, Boolean(feed)]);
+
+  const onCashScan = useCallback(
+    (text: string) => {
+      const t = text.replace(/^SHUSHRUSHA:/i, "").replace(/^#/, "").trim().toUpperCase();
+      const match = feed?.mine.find((b) => b.tracking_id.toUpperCase() === t);
+      setCashScan(false);
+      setCashQr(t);
+      setCashAmount(String(match?.total ?? match?.amount ?? ""));
+    },
+    [feed],
+  );
+
+  async function confirmCash() {
+    try {
+      await cashFn({ data: { code, pin, qr: cashQr, amount: Number(cashAmount) } });
+      toast.success(`৳${cashAmount} নগদ সংগ্রহ অ্যাডমিনে জমা হয়েছে`);
+      setCashQr("");
+      await load(code, pin, true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "সংগ্রহ করা যায়নি");
+    }
+  }
+
+  async function sendFee() {
+    if (!chatFor || !Number(feeAmount)) return;
+    const text = `অতিরিক্ত সার্ভিস / ড্রেসিং সামগ্রীর ফি বিবরণী: ${feeNote.trim() || "অতিরিক্ত সামগ্রী"} — ৳${Number(feeAmount)}`;
+    await sendFn({ data: { code, pin, trackingId: chatFor.tracking_id, text } });
+    setFeeAmount("");
+    setFeeNote("");
+    toast.success("ফি বিবরণী পাঠানো হয়েছে");
+  }
 
   async function startChat(b: BookingRow) {
     setChatFor(b);
@@ -218,7 +265,7 @@ function WorkerPage() {
             <LockKeyhole className="size-6" />
           </span>
           <h1 className="mt-4 text-center text-xl font-bold text-foreground">নার্স ও ওয়ার্কার পোর্টাল</h1>
-          <p className="mt-1 text-center text-sm text-muted-foreground">আপনার আইডি ও পিন দিয়ে প্রবেশ করুন।</p>
+          <p className="mt-1 text-center text-sm text-muted-foreground">আপনার ইমেইল/আইডি ও পাসওয়ার্ড দিয়ে প্রবেশ করুন।</p>
 
           <div className="mt-5 grid grid-cols-2 gap-2">
             {(["nurse", "worker"] as const).map((t) => (
@@ -237,11 +284,11 @@ function WorkerPage() {
 
           <div className="mt-4 space-y-3">
             <div>
-              <Label htmlFor="wcode">ওয়ার্কার আইডি</Label>
-              <Input id="wcode" className="mt-1.5" placeholder="NUR-101" value={code} onChange={(e) => setCode(e.target.value)} />
+              <Label htmlFor="wcode">ইমেইল বা নার্স আইডি</Label>
+              <Input id="wcode" className="mt-1.5 min-h-11" placeholder="nurse@example.com / NUR-101" value={code} onChange={(e) => setCode(e.target.value)} />
             </div>
             <div>
-              <Label htmlFor="wpin">পিন</Label>
+              <Label htmlFor="wpin">পাসওয়ার্ড / পিন</Label>
               <Input
                 id="wpin"
                 className="mt-1.5"
@@ -274,13 +321,45 @@ function WorkerPage() {
               {TIER_LABEL[w.tier]} • ⭐ {w.rating} • {w.completed_visits} ভিজিট
             </p>
           </div>
-          <Button variant="softOutline" size="sm" onClick={() => void load(code, pin)}>
-            <RefreshCw /> রিফ্রেশ
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="hero" size="sm" className="min-h-11" onClick={() => setCashScan(true)}>
+              <Banknote /> Scan Cash QR
+            </Button>
+            <Button variant="softOutline" size="sm" className="min-h-11" onClick={() => void load(code, pin)}>
+              <RefreshCw /> রিফ্রেশ
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+        <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-1.5">
+          {([["jobs", "আমার কাজ ও আয়"], ["news", "Case Updates & News"]] as const).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setView(id)}
+              className={`min-h-11 rounded-xl px-3 text-sm font-semibold ${view === id ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {view === "news" ? (
+          <section className="space-y-3">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
+              <Megaphone className="size-5 text-primary" /> Case Updates & News
+            </h2>
+            {notices.length === 0 && <p className="text-sm text-muted-foreground">এখনো কোনো নোটিশ নেই।</p>}
+            {notices.map((n) => (
+              <article key={n.id} className="card-elevated p-4">
+                <p className="font-semibold text-foreground">{n.title}</p>
+                <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{n.body}</p>
+                <p className="mt-2 text-[11px] text-muted-foreground">{new Date(n.created_at).toLocaleString("bn-BD")}</p>
+              </article>
+            ))}
+          </section>
+        ) : (<>
         <section className="grid gap-3 sm:grid-cols-4">
           {[
             { label: "আজকের আয়", value: `৳${feed.earnings.today}` },
@@ -388,7 +467,29 @@ function WorkerPage() {
             ))}
           </div>
         </section>
+        </>)}
       </main>
+      {cashScan && <QrScanner onResult={onCashScan} onClose={() => setCashScan(false)} />}
+      {cashQr && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="card-elevated w-full max-w-sm space-y-3 p-5">
+            <h3 className="flex items-center gap-2 font-bold text-foreground">
+              <Banknote className="size-5 text-primary" /> নগদ সংগ্রহ নিশ্চিত করুন
+            </h3>
+            <p className="text-sm text-muted-foreground">অর্ডার #{cashQr}</p>
+            <div className="space-y-1">
+              <Label>সংগৃহীত টাকা (৳)</Label>
+              <Input className="min-h-11" type="number" value={cashAmount} onChange={(e) => setCashAmount(e.target.value)} />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="min-h-11 flex-1" onClick={() => setCashQr("")}>বাতিল</Button>
+              <Button variant="hero" className="min-h-11 flex-1" disabled={!Number(cashAmount)} onClick={() => void confirmCash()}>
+                নিশ্চিত করুন
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {scanFor && (
         <>
           <QrScanner onResult={(t) => void completeWithQr(t)} onClose={() => setScanFor(null)} />
@@ -405,11 +506,17 @@ function WorkerPage() {
             <SheetTitle className="text-base">{chatFor?.customer_name || "রোগী"}</SheetTitle>
             <p className="text-xs text-muted-foreground">অর্ডার #{chatFor?.tracking_id} • {chatFor?.service}</p>
           </SheetHeader>
+          <div className="flex flex-wrap items-center gap-2 border-b border-border bg-secondary/40 p-2">
+            <span className="w-full text-[11px] font-semibold text-muted-foreground">অতিরিক্ত সার্ভিস / ড্রেসিং সামগ্রীর ফি বিবরণী</span>
+            <Input className="min-h-11 min-w-0 flex-1" placeholder="বিবরণ (যেমন গজ, ব্যান্ডেজ)" value={feeNote} onChange={(e) => setFeeNote(e.target.value)} />
+            <Input className="min-h-11 w-24" type="number" placeholder="৳" value={feeAmount} onChange={(e) => setFeeAmount(e.target.value)} />
+            <Button size="sm" variant="hero" className="min-h-11" disabled={!Number(feeAmount)} onClick={() => void sendFee()}>পাঠান</Button>
+          </div>
           <div className="min-h-0 flex-1">
             <MonitoredChat
               threadId={threadId}
               me="nurse"
-              templates={["আমি রওনা দিয়েছি 🚗", "লোকেশনে পৌঁছেছি 📍", "সার্ভিস সম্পন্ন হয়েছে ✅"]}
+              templates={["স্বাগতম! আমি আপনার দায়িত্বপ্রাপ্ত নার্স।", "আমি রওনা দিয়েছি 🚗", "লোকেশনে পৌঁছেছি 📍", "সার্ভিস সম্পন্ন হয়েছে ✅"]}
               onSend={async (m) => {
                 if (!chatFor) return;
                 await sendFn({ data: { code, pin, trackingId: chatFor.tracking_id, ...m } });

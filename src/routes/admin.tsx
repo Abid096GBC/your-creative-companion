@@ -26,6 +26,7 @@ import { StoreManager } from "@/components/admin/StoreManager";
 import { PromoManager } from "@/components/admin/PromoManager";
 import { PaidBadge } from "@/components/payment/BkashCheckout";
 import { CatalogEditor } from "@/components/admin/CatalogEditor";
+import { CashFinance } from "@/components/admin/CashFinance";
 import { ApplicationsManager } from "@/components/admin/ApplicationsManager";
 import { BkashSettings, ChatMonitor } from "@/components/admin/ChatMonitor";
 import {
@@ -73,6 +74,9 @@ const TABS = [
   { id: "labs", label: "ল্যাব টেস্ট" },
   { id: "services", label: "সার্ভিস ও চার্জ" },
   { id: "bkash", label: "বিকাশ" },
+  { id: "finance", label: "ফাইন্যান্স ও নগদ" },
+  { id: "quiz", label: "Quiz Manager" },
+  { id: "notices", label: "নার্স নোটিশ" },
   { id: "pricing", label: "প্রোডাক্ট ও প্রাইসিং" },
   { id: "promo", label: "প্রমো ও কুপন" },
   { id: "medgemma", label: "MedGemma (মেডিকেল)" },
@@ -448,6 +452,9 @@ function AdminPage() {
         {tab === "labs" && <div className="mt-6"><CatalogEditor password={password} table="lab_tests" /></div>}
         {tab === "services" && <div className="mt-6"><CatalogEditor password={password} table="services" /></div>}
         {tab === "bkash" && <div className="mt-6"><BkashSettings password={password} /></div>}
+        {tab === "finance" && <div className="mt-6"><CashFinance password={password} /></div>}
+        {tab === "quiz" && <div className="mt-6"><CatalogEditor password={password} table="quiz_questions" /></div>}
+        {tab === "notices" && <div className="mt-6"><CatalogEditor password={password} table="nurse_notices" /></div>}
 
         {tab === "pricing" && (
           <div className="mt-6">

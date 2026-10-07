@@ -3,18 +3,22 @@ import { z } from "zod";
 import type { BookingRow, NurseRow } from "@/lib/booking-types";
 
 const cred = z.object({
-  code: z.string().trim().min(2).max(20),
-  pin: z.string().trim().min(3).max(20),
+  code: z.string().trim().min(2).max(200),
+  pin: z.string().trim().min(3).max(64),
 });
 
 async function authWorker(code: string, pin: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: worker } = await supabaseAdmin
-    .from("nurses")
-    .select("*")
-    .eq("nurse_code", code.toUpperCase().replace(/^#/, ""))
-    .maybeSingle();
-  if (!worker || worker.login_pin !== pin) throw new Error("Invalid worker credentials");
+  const { hashPassword } = await import("@/lib/admin-auth.server");
+  const isEmail = code.includes("@");
+  const q = supabaseAdmin.from("nurses").select("*");
+  const { data: worker } = await (isEmail
+    ? q.eq("email", code.trim().toLowerCase())
+    : q.eq("nurse_code", code.toUpperCase().replace(/^#/, ""))
+  ).maybeSingle();
+  const hash = await hashPassword(pin);
+  const ok = worker && ((worker.password_hash && worker.password_hash === hash) || worker.login_pin === pin);
+  if (!worker || !ok) throw new Error("Invalid worker credentials");
   if (!worker.active) throw new Error("Account inactive");
   return { worker: worker as unknown as NurseRow, supabaseAdmin };
 }
@@ -125,4 +129,53 @@ export const workerAction = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("bookings").update(patch).eq("id", data.bookingId);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export const workerNotices = createServerFn({ method: "POST" })
+  .inputValidator((data: z.input<typeof cred>) => cred.parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await authWorker(data.code, data.pin);
+    const { data: rows } = await supabaseAdmin
+      .from("nurse_notices")
+      .select("id, title, body, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    return rows ?? [];
+  });
+
+export const workerCollectCash = createServerFn({ method: "POST" })
+  .inputValidator((data: { code: string; pin: string; qr: string; amount: number }) =>
+    z
+      .object({
+        code: cred.shape.code,
+        pin: cred.shape.pin,
+        qr: z.string().trim().min(2).max(120),
+        amount: z.number().min(1).max(500000),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { worker, supabaseAdmin } = await authWorker(data.code, data.pin);
+    const tracking = data.qr.replace(/^SHUSHRUSHA:/i, "").replace(/^#/, "").trim().toUpperCase();
+    const { data: booking } = await supabaseAdmin
+      .from("bookings")
+      .select("id, tracking_id, nurse_id, payment_status")
+      .eq("tracking_id", tracking)
+      .maybeSingle();
+    if (!booking) throw new Error("এই QR-এর কোনো অর্ডার পাওয়া যায়নি");
+    if (booking.nurse_id !== worker.id) throw new Error("এই অর্ডারটি আপনাকে দেওয়া হয়নি");
+    if (booking.payment_status === "Paid (Cash)") throw new Error("এই অর্ডারের ক্যাশ আগেই নেওয়া হয়েছে");
+    const { error } = await supabaseAdmin
+      .from("bookings")
+      .update({ payment_status: "Paid (Cash)", payment_method: "Cash", paid_at: new Date().toISOString() })
+      .eq("id", booking.id);
+    if (error) throw new Error(error.message);
+    await supabaseAdmin.from("cash_collections").insert({
+      booking_id: booking.id,
+      tracking_id: booking.tracking_id,
+      nurse_id: worker.id,
+      nurse_name: worker.name,
+      amount: data.amount,
+    });
+    return { ok: true, tracking: booking.tracking_id };
   });
