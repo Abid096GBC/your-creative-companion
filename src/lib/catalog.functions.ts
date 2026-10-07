@@ -10,7 +10,7 @@ async function admin(password: string) {
   return supabaseAdmin;
 }
 
-const TABLES = ["doctors", "lab_tests", "hero_banners", "services"] as const;
+const TABLES = ["doctors", "lab_tests", "hero_banners", "services", "quiz_questions", "nurse_notices"] as const;
 export type CatalogTable = (typeof TABLES)[number];
 
 /* ---------- Admin: catalogue CRUD ---------- */
@@ -21,7 +21,10 @@ export const adminListCatalog = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const db = await admin(data.password);
-    const { data: rows, error } = await db.from(data.table).select("*").order("created_at", { ascending: true });
+    const q = db.from(data.table).select("*");
+    const { data: rows, error } = await (data.table === "hero_banners"
+      ? q.order("sort_order", { ascending: true }).order("created_at", { ascending: true })
+      : q.order("created_at", { ascending: data.table !== "nurse_notices" }));
     if (error) throw new Error(error.message);
     return (rows ?? []) as unknown as Record<string, string | number | boolean | null>[];
   });
@@ -107,18 +110,24 @@ export const adminListApplications = createServerFn({ method: "POST" })
   });
 
 export const adminApproveApplication = createServerFn({ method: "POST" })
-  .inputValidator((d: { password: string; id: string; nurseCode: string; pin: string }) =>
+  .inputValidator((d: { password: string; id: string; nurseCode: string; pin: string; email?: string }) =>
     z
       .object({
         password: pw,
         id: z.string().uuid(),
         nurseCode: z.string().trim().min(2).max(20).regex(/^[A-Za-z0-9-]+$/),
-        pin: z.string().trim().min(4).max(20),
+        pin: z.string().trim().min(4).max(64),
+        email: z.string().trim().email().max(200).optional(),
       })
       .parse(d),
   )
   .handler(async ({ data }) => {
     const db = await admin(data.password);
+    const { hashPassword } = await import("@/lib/admin-auth.server");
+    if (data.email) {
+      const { data: dup } = await db.from("nurses").select("id").eq("email", data.email.toLowerCase()).maybeSingle();
+      if (dup) throw new Error("এই ইমেইল আগে থেকেই ব্যবহৃত");
+    }
     const { data: app } = await db.from("nurse_applications").select("*").eq("id", data.id).maybeSingle();
     if (!app) throw new Error("Application not found");
     const { data: nurse, error } = await db
@@ -130,6 +139,8 @@ export const adminApproveApplication = createServerFn({ method: "POST" })
         tier: app.tier === "caregiver" ? "caregiver" : "nurse",
         nurse_code: data.nurseCode.toUpperCase(),
         login_pin: data.pin,
+        email: data.email ? data.email.toLowerCase() : null,
+        password_hash: await hashPassword(data.pin),
         active: true,
       })
       .select("id")

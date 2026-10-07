@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,30 @@ export const CATALOG_CONFIG: Record<CatalogTable, { title: string; fields: Field
       { key: "sort_order", label: "ক্রম", type: "number" },
       { key: "image_url", label: "ব্যানার ছবি", type: "image" },
       { key: "active", label: "সক্রিয়", type: "bool" },
+    ],
+  },
+  quiz_questions: {
+    title: "কুইজ প্রশ্ন (Quiz Manager)",
+    summary: (r) => `${r["category"]} • সঠিক: ${String(r["correct"]).toUpperCase()} • +${r["reward"]} / -${r["penalty"]}`,
+    fields: [
+      { key: "question", label: "প্রশ্ন", type: "textarea" },
+      { key: "option_a", label: "অপশন A", type: "text" },
+      { key: "option_b", label: "অপশন B", type: "text" },
+      { key: "option_c", label: "অপশন C", type: "text" },
+      { key: "option_d", label: "অপশন D", type: "text" },
+      { key: "correct", label: "সঠিক উত্তর (a / b / c / d)", type: "text" },
+      { key: "reward", label: "পুরস্কার পয়েন্ট (Shushrusha Cash)", type: "number" },
+      { key: "penalty", label: "নেগেটিভ মার্ক পয়েন্ট", type: "number" },
+      { key: "category", label: "ক্যাটাগরি (Medical Admission / BCS Health)", type: "text" },
+      { key: "active", label: "সক্রিয়", type: "bool" },
+    ],
+  },
+  nurse_notices: {
+    title: "নার্স নোটিশ (Case Updates & News)",
+    summary: (r) => new Date(String(r["created_at"] ?? Date.now())).toLocaleDateString("bn-BD"),
+    fields: [
+      { key: "title", label: "শিরোনাম", type: "text" },
+      { key: "body", label: "বিস্তারিত", type: "textarea" },
     ],
   },
   services: {
@@ -110,6 +134,18 @@ export function CatalogEditor({ password, table }: { password: string; table: Ca
     }
   }
 
+  async function move(i: number, dir: -1 | 1) {
+    const next = [...rows];
+    const [r] = next.splice(i, 1);
+    if (!r) return;
+    next.splice(i + dir, 0, r);
+    setRows(next);
+    await Promise.all(
+      next.map((row, idx) => save({ data: { password, table, id: String(row["id"]), row: { sort_order: idx } } })),
+    );
+    toast.success("ক্রম আপডেট হয়েছে");
+  }
+
   async function remove(id: string) {
     if (!confirm("মুছে ফেলবেন?")) return;
     await del({ data: { password, table, id } });
@@ -138,8 +174,14 @@ export function CatalogEditor({ password, table }: { password: string; table: Ca
                   চালু
                 </label>
               ) : f.type === "image" ? (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   {edit[f.key] ? <img src={String(edit[f.key])} alt="" className="size-16 rounded-lg object-cover" /> : null}
+                  <Input
+                    placeholder="ছবির লিংক (https://...)"
+                    className="min-w-0 flex-1"
+                    value={String(edit[f.key] ?? "").startsWith("data:") ? "" : String(edit[f.key] ?? "")}
+                    onChange={(e) => setEdit({ ...edit, [f.key]: e.target.value })}
+                  />
                   <Input
                     type="file"
                     accept="image/*"
@@ -168,15 +210,25 @@ export function CatalogEditor({ password, table }: { password: string; table: Ca
       )}
 
       <ul className="divide-y divide-border">
-        {rows.map((r) => (
+        {rows.map((r, i) => (
           <li key={String(r["id"])} className="flex items-center justify-between gap-3 py-3">
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">
-                {String(r["name"] ?? r["title"] ?? "")} {r["active"] === false && <span className="text-xs text-destructive">(বন্ধ)</span>}
+                {String(r["name"] ?? r["title"] ?? r["question"] ?? "")} {r["active"] === false && <span className="text-xs text-destructive">(বন্ধ)</span>}
               </p>
               <p className="truncate text-xs text-muted-foreground">{cfg.summary(r)}</p>
             </div>
             <div className="flex shrink-0 gap-1">
+              {table === "hero_banners" && (
+                <>
+                  <Button size="icon" variant="outline" aria-label="উপরে" disabled={i === 0} onClick={() => void move(i, -1)}>
+                    <ArrowUp />
+                  </Button>
+                  <Button size="icon" variant="outline" aria-label="নিচে" disabled={i === rows.length - 1} onClick={() => void move(i, 1)}>
+                    <ArrowDown />
+                  </Button>
+                </>
+              )}
               <Button size="icon" variant="softOutline" aria-label="এডিট" onClick={() => setEdit(r)}>
                 <Pencil />
               </Button>
