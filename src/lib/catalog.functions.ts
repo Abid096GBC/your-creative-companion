@@ -301,3 +301,18 @@ export const recordBkashPayment = createServerFn({ method: "POST" })
       .eq("tracking_id", data.trackingId.toUpperCase());
     return { ok: true };
   });
+
+/* ---------- Cash collections (admin finance) ---------- */
+
+export const adminListCash = createServerFn({ method: "POST" })
+  .inputValidator((d: { password: string }) => z.object({ password: pw }).parse(d))
+  .handler(async ({ data }) => {
+    const db = await admin(data.password);
+    const { data: rows, error } = await db
+      .from("cash_collections")
+      .select("id, tracking_id, nurse_name, amount, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((r) => ({ ...r, amount: Number(r.amount) }));
+  });
