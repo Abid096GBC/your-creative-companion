@@ -237,8 +237,8 @@ export const nurseSendMessage = createServerFn({ method: "POST" })
   .inputValidator((d: { code: string; pin: string; trackingId: string; text?: string; photo?: string }) =>
     z
       .object({
-        code: z.string().trim().min(2).max(20),
-        pin: z.string().trim().min(3).max(20),
+        code: z.string().trim().min(2).max(200),
+        pin: z.string().trim().min(3).max(64),
         trackingId: z.string().trim().min(3).max(40),
         ...msgShape,
       })
@@ -246,12 +246,9 @@ export const nurseSendMessage = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const { data: nurse } = await db
-      .from("nurses")
-      .select("id,name,login_pin")
-      .eq("nurse_code", data.code.toUpperCase().replace(/^#/, ""))
-      .maybeSingle();
-    if (!nurse || nurse.login_pin !== data.pin) throw new Error("Invalid worker credentials");
+    const { findNurse } = await import("@/lib/admin-auth.server");
+    const nurse = (await findNurse(db, data.code, data.pin)) as { id: string; name: string } | null;
+    if (!nurse) throw new Error("Invalid worker credentials");
     const tid = data.trackingId.toUpperCase();
     const { data: booking } = await db.from("bookings").select("nurse_id").eq("tracking_id", tid).maybeSingle();
     if (!booking || booking.nurse_id !== nurse.id) throw new Error("Not assigned to this order");

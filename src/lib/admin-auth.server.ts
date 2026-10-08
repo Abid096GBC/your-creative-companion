@@ -31,3 +31,18 @@ export async function hashPassword(pw: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`shushrusha:${pw}`));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+
+/** Look up a nurse by email or nurse code and verify password (hashed) or legacy PIN. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function findNurse(db: any, code: string, pin: string) {
+  const isEmail = code.includes("@");
+  const q = db.from("nurses").select("*");
+  const { data: worker } = await (isEmail
+    ? q.eq("email", code.trim().toLowerCase())
+    : q.eq("nurse_code", code.toUpperCase().replace(/^#/, ""))
+  ).maybeSingle();
+  if (!worker) return null;
+  const hash = await hashPassword(pin);
+  const ok = (worker.password_hash && worker.password_hash === hash) || worker.login_pin === pin;
+  return ok ? worker : null;
+}
