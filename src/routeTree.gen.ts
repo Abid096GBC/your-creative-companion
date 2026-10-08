@@ -18,6 +18,7 @@ import { Route as LabTestsRouteImport } from './routes/lab-tests'
 import { Route as MedGamerRouteImport } from './routes/med-gamer'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as WorkerRouteImport } from './routes/worker'
@@ -69,6 +70,11 @@ const OrdersRoute = OrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizRoute = QuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoreRoute = StoreRouteImport.update({
   id: '/store',
   path: '/store',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/med-gamer': typeof MedGamerRoute
   '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
+  '/quiz': typeof QuizRoute
   '/store': typeof StoreRoute
   '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/med-gamer': typeof MedGamerRoute
   '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
+  '/quiz': typeof QuizRoute
   '/store': typeof StoreRoute
   '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/med-gamer': typeof MedGamerRoute
   '/more': typeof MoreRoute
   '/orders': typeof OrdersRoute
+  '/quiz': typeof QuizRoute
   '/store': typeof StoreRoute
   '/wallet': typeof WalletRoute
   '/worker': typeof WorkerRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/med-gamer'
     | '/more'
     | '/orders'
+    | '/quiz'
     | '/store'
     | '/wallet'
     | '/worker'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/med-gamer'
     | '/more'
     | '/orders'
+    | '/quiz'
     | '/store'
     | '/wallet'
     | '/worker'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/med-gamer'
     | '/more'
     | '/orders'
+    | '/quiz'
     | '/store'
     | '/wallet'
     | '/worker'
@@ -205,6 +217,7 @@ export interface RootRouteChildren {
   MedGamerRoute: typeof MedGamerRoute
   MoreRoute: typeof MoreRoute
   OrdersRoute: typeof OrdersRoute
+  QuizRoute: typeof QuizRoute
   StoreRoute: typeof StoreRoute
   WalletRoute: typeof WalletRoute
   WorkerRoute: typeof WorkerRoute
@@ -277,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quiz': {
+      id: '/quiz'
+      path: '/quiz'
+      fullPath: '/quiz'
+      preLoaderRoute: typeof QuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/store': {
       id: '/store'
       path: '/store'
@@ -325,6 +345,7 @@ const rootRouteChildren: RootRouteChildren = {
   MedGamerRoute: MedGamerRoute,
   MoreRoute: MoreRoute,
   OrdersRoute: OrdersRoute,
+  QuizRoute: QuizRoute,
   StoreRoute: StoreRoute,
   WalletRoute: WalletRoute,
   WorkerRoute: WorkerRoute,

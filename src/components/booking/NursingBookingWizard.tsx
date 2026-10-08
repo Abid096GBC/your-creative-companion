@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createBooking } from "@/lib/bookings.functions";
 import { recordBkashPayment } from "@/lib/catalog.functions";
-import { loadProfile } from "@/lib/account-store";
+import { loadGamer, loadProfile, loadWallet, saveGamer, saveWallet } from "@/lib/account-store";
 import type { InjectionItem } from "@/lib/injections";
 import { BkashCheckout, BkashOption } from "@/components/payment/BkashCheckout";
 import { BODY_PARTS, BodyPartSelector, DoseScheduler, MedicineSearch, StitchCounter, type Dose } from "@/components/booking/ServiceExtras";
@@ -86,10 +86,27 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const [promo, setPromo] = useState("");
   const [applied, setApplied] = useState(0);
   const [promoMsg, setPromoMsg] = useState("");
+  const [wantsInjection, setWantsInjection] = useState<"yes" | "no" | "">("");
+  const [cannula, setCannula] = useState(false);
+  const [fees, setFees] = useState({ visit: CONVENIENCE_FEE, cannula: 150 });
+  const [useCash, setUseCash] = useState(false);
+  const [cashAvail, setCashAvail] = useState(0);
 
   useEffect(() => {
     setPatients(loadPatients());
     setAddress(savedLocation());
+    setCashAvail(loadWallet() + Math.floor(loadGamer().points / 100) * 10);
+    void supabase
+      .from("app_settings")
+      .select("key, value")
+      .in("key", ["visit_charge", "cannula_fee"])
+      .then(({ data }) => {
+        const m = Object.fromEntries((data ?? []).map((r) => [r.key, Number(r.value)]));
+        setFees({
+          visit: Number.isFinite(m["visit_charge"]) ? m["visit_charge"]! : CONVENIENCE_FEE,
+          cannula: Number.isFinite(m["cannula_fee"]) ? m["cannula_fee"]! : 150,
+        });
+      });
     // Admin-managed prices override the defaults.
     void supabase
       .from("services")
@@ -105,15 +122,18 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const hasInjection = picked.includes("injection");
   const hasWound = picked.includes("dressing") || picked.includes("suturing");
   const doseCount = hasInjection ? doses.length : 1;
-  const linePrice = (s: Item) =>
-    s.id === "injection" ? (s.price + (medicine?.price ?? 0)) * doseCount : s.price;
-  const serviceTotal = chosen.reduce((n, s) => n + linePrice(s), 0);
-  const walletDiscount = payment === "wallet" ? Math.round(serviceTotal * 0.05) : 0;
-  const total = Math.max(0, serviceTotal + CONVENIENCE_FEE - walletDiscount - applied);
+  const medPrice = hasInjection && wantsInjection === "yes" ? medicine?.price ?? 0 : 0;
+  const linePrice = (s: Item) => (s.id === "injection" ? (s.price + medPrice) * doseCount : s.price);
+  const cannulaFee = hasInjection && cannula ? fees.cannula : 0;
+  const serviceTotal = chosen.reduce((n, s) => n + linePrice(s), 0) + cannulaFee;
+  // Visit / delivery charge is always added once, regardless of push count.
+  const gross = serviceTotal + fees.visit;
+  const walletDiscount = useCash ? Math.min(cashAvail, Math.max(0, gross - applied)) : 0;
+  const total = Math.max(0, gross - walletDiscount - applied);
   const patient = patients.find((p) => p.id === patientId);
 
   const canNext = [
-    picked.length > 0,
+    picked.length > 0 && (!hasInjection || (wantsInjection !== "" && (wantsInjection === "no" || Boolean(medicine)))),
     Boolean(patientId),
     Boolean(
       address.trim() &&
@@ -154,7 +174,8 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
     const firstDate = hasInjection ? doses[0]?.date ?? "" : date;
     const firstSlot = hasInjection ? doses[0]?.slot ?? "" : slot;
     const extras = [
-      medicine ? `ওষুধ: ${medicine.brand} ${medicine.strength}` : "",
+      medPrice && medicine ? `ওষুধ: ${medicine.brand} ${medicine.strength}` : "",
+      hasInjection ? `ক্যানুলা: ${cannula ? "হ্যাঁ" : "না"}` : "",
       hasInjection && doses.length > 1 ? `ডোজ: ${doses.map((d) => `${d.date} ${slotLabel(d.slot)}`).join("; ")}` : "",
       bodyPart ? `অংশ: ${BODY_PARTS.find((b) => b.id === bodyPart)?.label}` : "",
       stitches ? `সেলাই: ${stitches}` : "",
@@ -170,7 +191,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
           details: { relation: patient.relation, extras: extras.join(" | ") },
           ...(bodyPart ? { body_region: bodyPart } : {}),
           ...(stitches ? { stitch_count: stitches } : {}),
-          amount: serviceTotal + CONVENIENCE_FEE,
+          amount: gross,
           discount: walletDiscount + applied,
           notes: [notes, ...extras].filter(Boolean).join("\n").slice(0, 600),
           time_slot: `${firstDate} ${slotLabel(firstSlot)}`,
@@ -183,6 +204,17 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
       toast.error("সার্ভারে সেভ করা যায়নি — লোকালি সেভ হয়েছে");
     }
     setBusy(false);
+    if (walletDiscount > 0) {
+      let left = walletDiscount;
+      const w = loadWallet();
+      const fromWallet = Math.min(w, left);
+      saveWallet(w - fromWallet);
+      left -= fromWallet;
+      if (left > 0) {
+        const g = loadGamer();
+        saveGamer({ ...g, points: Math.max(0, g.points - Math.ceil(left / 10) * 100) });
+      }
+    }
     const order: LocalOrder = {
       id: trackingId,
       category: "nursing",
@@ -254,9 +286,35 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
             })}
             {hasInjection && (
               <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
-                <Label>ইনজেকশনের ওষুধ (ঐচ্ছিক)</Label>
-                <MedicineSearch value={medicine} onChange={setMedicine} />
-                <p className="text-xs text-muted-foreground">ওষুধের দাম সার্ভিস চার্জের সাথে যোগ হবে। ডোজ সংখ্যা পরের ধাপে বেছে নিন।</p>
+                <Label>ইনজেকশন দিতে হবে কি?</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["yes", "no"] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => {
+                        setWantsInjection(v);
+                        if (v === "no") setMedicine(null);
+                      }}
+                      className={`min-h-11 rounded-xl border text-sm font-semibold ${
+                        wantsInjection === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground"
+                      }`}
+                    >
+                      {v === "yes" ? "হ্যাঁ" : "না"}
+                    </button>
+                  ))}
+                </div>
+                {wantsInjection === "yes" && (
+                  <>
+                    <Label>ওষুধের নাম লিখুন (যেমন Ceftron)</Label>
+                    <MedicineSearch value={medicine} onChange={setMedicine} />
+                    <p className="text-xs text-muted-foreground">ওষুধের দাম প্রতি পুশে যোগ হবে। পুশ / ডোজ সংখ্যা পরের ধাপে বেছে নিন।</p>
+                  </>
+                )}
+                <label className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-background px-3">
+                  <span className="text-sm font-medium text-foreground">ক্যানুলা প্রয়োজন? <span className="text-xs text-muted-foreground">(+৳{fees.cannula} কিট ফি)</span></span>
+                  <input type="checkbox" className="size-5 accent-primary" checked={cannula} onChange={(e) => setCannula(e.target.checked)} />
+                </label>
               </div>
             )}
             {hasWound && (
@@ -268,7 +326,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              কনভিনিয়েন্স / ট্রাভেল চার্জ ৳{CONVENIENCE_FEE} আলাদাভাবে যুক্ত হবে।
+              ভিজিট / ডেলিভারি চার্জ ৳{fees.visit} সবসময় মোট বিলের সাথে যুক্ত হবে।
             </p>
           </section>
         )}
@@ -337,7 +395,13 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
               <Label>
                 <Clock className="mr-1 inline size-4" /> টাইম স্লট
               </Label>
-              <div className="grid gap-2 sm:grid-cols-3">
+              <label className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-background px-3">
+              <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Wallet className="size-4 text-primary" /> শুশ্রূষা ক্যাশ ব্যবহার করুন (৳{cashAvail} আছে)
+              </span>
+              <input type="checkbox" className="size-5 accent-primary" disabled={cashAvail <= 0} checked={useCash} onChange={(e) => setUseCash(e.target.checked)} />
+            </label>
+            <div className="grid gap-2 sm:grid-cols-2">
                 {SLOTS.map((s) => (
                   <button
                     key={s.id}
@@ -371,10 +435,10 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
           <section className="space-y-4">
             <h2 className="text-lg font-bold text-foreground">মেডিকেল নোট ও প্রেসক্রিপশন</h2>
             <div className="space-y-2">
-              <Label htmlFor="b-notes">বিশেষ নির্দেশনা</Label>
+              <Label htmlFor="b-notes">অর্ডার বিবরণ / মেডিকেল নির্দেশনা</Label>
               <Textarea
                 id="b-notes"
-                rows={4}
+                rows={5}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="যেমন: রোগী ডায়াবেটিক, ড্রেসিং সাবধানে করতে হবে।"
@@ -403,16 +467,24 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
               {chosen.map((s) => (
                 <div key={s.id} className="flex justify-between">
                   <span className="text-muted-foreground">{s.title}</span>
-                  <span className="font-medium text-foreground">৳{linePrice(s)}</span>
+                  <span className="font-medium text-foreground">
+                    {s.id === "injection" && doseCount > 1 ? `${doseCount} × ৳${s.price + medPrice} = ` : ""}৳{linePrice(s)}
+                  </span>
                 </div>
               ))}
+              {cannulaFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">ক্যানুলা কিট</span>
+                  <span className="font-medium text-foreground">৳{cannulaFee}</span>
+                </div>
+              )}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">ট্রাভেল / ইমার্জেন্সি চার্জ</span>
-                <span className="font-medium text-foreground">৳{CONVENIENCE_FEE}</span>
+                <span className="text-muted-foreground">ভিজিট / ডেলিভারি চার্জ</span>
+                <span className="font-medium text-foreground">৳{fees.visit}</span>
               </div>
               {walletDiscount > 0 && (
                 <div className="flex justify-between text-success">
-                  <span>ওয়ালেট ছাড় (৫%)</span>
+                  <span>শুশ্রূষা ক্যাশ</span>
                   <span>-৳{walletDiscount}</span>
                 </div>
               )}
@@ -428,12 +500,17 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
               </div>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-3">
+            <label className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-background px-3">
+              <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Wallet className="size-4 text-primary" /> শুশ্রূষা ক্যাশ ব্যবহার করুন (৳{cashAvail} আছে)
+              </span>
+              <input type="checkbox" className="size-5 accent-primary" disabled={cashAvail <= 0} checked={useCash} onChange={(e) => setUseCash(e.target.checked)} />
+            </label>
+            <div className="grid gap-2 sm:grid-cols-2">
               <BkashOption selected={payment === "bkash"} onClick={() => setPayment("bkash")} />
               {(
                 [
                   { id: "cash", label: "ক্যাশ অন সার্ভিস", icon: Stethoscope },
-                  { id: "wallet", label: "শুশ্রূষা ক্যাশ / ওয়ালেট", icon: Wallet },
                 ] as const
               ).map((o) => (
                 <button

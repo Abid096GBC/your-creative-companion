@@ -73,7 +73,7 @@ function MorePage() {
         </Group>
 
         <Group title="🎮 আর্ন ও রিওয়ার্ড">
-          <RowLink icon={Gamepad2} label="MedGamer — হেলথ কুইজ ও ডেইলি রিওয়ার্ড" to="/med-gamer" />
+          <RowLink icon={Gamepad2} label="শুশ্রূষা ক্যাশ কুইজ — খেলুন ও জিতুন" to="/quiz" />
           <Row icon={Gift} label="রেফার করে আয় করুন" onClick={() => setDlg("referral")} />
         </Group>
 
@@ -180,7 +180,7 @@ function Row({
   );
 }
 
-function RowLink({ icon: Icon, label, to }: { icon: React.ElementType; label: string; to: "/med-gamer" | "/career" }) {
+function RowLink({ icon: Icon, label, to }: { icon: React.ElementType; label: string; to: "/quiz" | "/career" }) {
   return (
     <Link
       to={to}

@@ -9,16 +9,9 @@ const cred = z.object({
 
 async function authWorker(code: string, pin: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { hashPassword } = await import("@/lib/admin-auth.server");
-  const isEmail = code.includes("@");
-  const q = supabaseAdmin.from("nurses").select("*");
-  const { data: worker } = await (isEmail
-    ? q.eq("email", code.trim().toLowerCase())
-    : q.eq("nurse_code", code.toUpperCase().replace(/^#/, ""))
-  ).maybeSingle();
-  const hash = await hashPassword(pin);
-  const ok = worker && ((worker.password_hash && worker.password_hash === hash) || worker.login_pin === pin);
-  if (!worker || !ok) throw new Error("Invalid worker credentials");
+  const { findNurse } = await import("@/lib/admin-auth.server");
+  const worker = await findNurse(supabaseAdmin, code, pin);
+  if (!worker) throw new Error("Invalid worker credentials");
   if (!worker.active) throw new Error("Account inactive");
   return { worker: worker as unknown as NurseRow, supabaseAdmin };
 }

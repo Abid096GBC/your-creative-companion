@@ -76,7 +76,7 @@ function WalletPage() {
         </section>
 
         <Button asChild variant="softOutline" className="min-h-12 w-full">
-          <Link to="/med-gamer">
+          <Link to="/quiz">
             <Gamepad2 /> MedGamer খেলে আরও পয়েন্ট জিতুন
           </Link>
         </Button>
