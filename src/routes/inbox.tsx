@@ -31,7 +31,7 @@ export const Route = createFileRoute("/inbox")({
 });
 
 function InboxPage() {
-  const [tab, setTab] = useState<"promo" | "alerts">("promo");
+  const [tab, setTab] = useState<"chats" | "promo" | "tips">("chats");
   const unread = useUnreadInbox();
 
   return (
@@ -48,33 +48,42 @@ function InboxPage() {
           </div>
         </header>
 
-        <div className="mt-5 grid grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-1.5 shadow-card">
-          <button
-            type="button"
-            onClick={() => setTab("promo")}
-            className={`min-h-11 rounded-xl px-3 text-sm font-semibold transition-colors ${
-              tab === "promo" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            📢 প্রমোশন ও টিপস
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab("alerts")}
-            className={`relative min-h-11 rounded-xl px-3 text-sm font-semibold transition-colors ${
-              tab === "alerts" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            🔔 নোটিফিকেশন ও চ্যাট
-            {unread > 0 && (
-              <span className="ml-1.5 inline-grid size-5 place-items-center rounded-full bg-destructive text-[11px] font-bold text-destructive-foreground">
-                {unread}
-              </span>
-            )}
-          </button>
+        <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border border-border bg-card p-1.5 shadow-card">
+          {(
+            [
+              ["chats", "💬 Chats"],
+              ["promo", "📢 Promotions"],
+              ["tips", "🩺 Health Tips"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              className={`min-h-11 rounded-xl px-2 text-xs font-semibold transition-colors sm:text-sm ${
+                tab === id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              {label}
+              {id === "chats" && unread > 0 && (
+                <span className="ml-1 inline-grid size-5 place-items-center rounded-full bg-destructive text-[11px] font-bold text-destructive-foreground">
+                  {unread}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
-        <div className="mt-5">{tab === "promo" ? <PromotionList /> : <><PatientOrderChats /><NotificationList /></>}</div>
+        <div className="mt-5">
+          {tab === "chats" && (
+            <>
+              <PatientOrderChats />
+              <NotificationList />
+            </>
+          )}
+          {tab === "promo" && <PromotionList kinds={["offer", "package"]} />}
+          {tab === "tips" && <PromotionList kinds={["blog"]} />}
+        </div>
       </main>
       <Footer />
       <WhatsAppFab />

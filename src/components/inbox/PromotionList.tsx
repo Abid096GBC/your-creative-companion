@@ -14,7 +14,8 @@ import { waLink } from "@/lib/site";
 
 const ICON = { offer: Gift, blog: BookOpen, package: Sparkles } as const;
 
-export function PromotionList() {
+export function PromotionList({ kinds }: { kinds?: Promotion["kind"][] } = {}) {
+  const items = kinds ? PROMOTIONS.filter((p) => kinds.includes(p.kind)) : PROMOTIONS;
   const [blog, setBlog] = useState<Promotion | null>(null);
   const [copied, setCopied] = useState("");
 
@@ -31,7 +32,7 @@ export function PromotionList() {
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2">
-        {PROMOTIONS.map((p) => {
+        {items.map((p) => {
           const Icon = ICON[p.kind];
           return (
             <article key={p.id} className="card-elevated flex flex-col p-4">
