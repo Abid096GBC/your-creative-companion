@@ -175,7 +175,8 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
     const firstDate = hasInjection ? doses[0]?.date ?? "" : date;
     const firstSlot = hasInjection ? doses[0]?.slot ?? "" : slot;
     const extras = [
-      medPrice && medicine ? `ওষুধ: ${medicine.brand} ${medicine.strength}` : "",
+      bringMeds === "yes" && medicine ? `ওষুধ (নার্স আনবে): ${medicine.brand} ${medicine.strength}` : "",
+      hasInjection && wantsInjection === "yes" && bringMeds === "no" ? "ওষুধ: রোগীর নিজস্ব ওষুধ" : "",
       hasInjection ? `ক্যানুলা: ${cannula ? "হ্যাঁ" : "না"}` : "",
       hasInjection && doses.length > 1 ? `ডোজ: ${doses.map((d) => `${d.date} ${slotLabel(d.slot)}`).join("; ")}` : "",
       bodyPart ? `অংশ: ${BODY_PARTS.find((b) => b.id === bodyPart)?.label}` : "",
