@@ -87,6 +87,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const [applied, setApplied] = useState(0);
   const [promoMsg, setPromoMsg] = useState("");
   const [wantsInjection, setWantsInjection] = useState<"yes" | "no" | "">("");
+  const [bringMeds, setBringMeds] = useState<"yes" | "no" | "">("");
   const [cannula, setCannula] = useState(false);
   const [fees, setFees] = useState({ visit: CONVENIENCE_FEE, cannula: 150 });
   const [useCash, setUseCash] = useState(false);
@@ -122,7 +123,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const hasInjection = picked.includes("injection");
   const hasWound = picked.includes("dressing") || picked.includes("suturing");
   const doseCount = hasInjection ? doses.length : 1;
-  const medPrice = hasInjection && wantsInjection === "yes" ? medicine?.price ?? 0 : 0;
+  const medPrice = hasInjection && bringMeds === "yes" ? medicine?.price ?? 0 : 0;
   const linePrice = (s: Item) => (s.id === "injection" ? (s.price + medPrice) * doseCount : s.price);
   const cannulaFee = hasInjection && cannula ? fees.cannula : 0;
   const serviceTotal = chosen.reduce((n, s) => n + linePrice(s), 0) + cannulaFee;
@@ -133,7 +134,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const patient = patients.find((p) => p.id === patientId);
 
   const canNext = [
-    picked.length > 0 && (!hasInjection || (wantsInjection !== "" && (wantsInjection === "no" || Boolean(medicine)))),
+    picked.length > 0 && (!hasInjection || (wantsInjection !== "" && (wantsInjection === "no" || (bringMeds !== "" && (bringMeds === "no" || Boolean(medicine)))))),
     Boolean(patientId),
     Boolean(
       address.trim() &&
@@ -174,7 +175,8 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
     const firstDate = hasInjection ? doses[0]?.date ?? "" : date;
     const firstSlot = hasInjection ? doses[0]?.slot ?? "" : slot;
     const extras = [
-      medPrice && medicine ? `ওষুধ: ${medicine.brand} ${medicine.strength}` : "",
+      bringMeds === "yes" && medicine ? `ওষুধ (নার্স আনবে): ${medicine.brand} ${medicine.strength}` : "",
+      hasInjection && wantsInjection === "yes" && bringMeds === "no" ? "ওষুধ: রোগীর নিজস্ব ওষুধ" : "",
       hasInjection ? `ক্যানুলা: ${cannula ? "হ্যাঁ" : "না"}` : "",
       hasInjection && doses.length > 1 ? `ডোজ: ${doses.map((d) => `${d.date} ${slotLabel(d.slot)}`).join("; ")}` : "",
       bodyPart ? `অংশ: ${BODY_PARTS.find((b) => b.id === bodyPart)?.label}` : "",
@@ -286,7 +288,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
             })}
             {hasInjection && (
               <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
-                <Label>ইনজেকশন দিতে হবে কি?</Label>
+                <Label>ইনজেকশন এর মেডিসিন দিতে হবে কি?</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {(["yes", "no"] as const).map((v) => (
                     <button
@@ -294,7 +296,10 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
                       type="button"
                       onClick={() => {
                         setWantsInjection(v);
-                        if (v === "no") setMedicine(null);
+                        if (v === "no") {
+                          setMedicine(null);
+                          setBringMeds("");
+                        }
                       }}
                       className={`min-h-11 rounded-xl border text-sm font-semibold ${
                         wantsInjection === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground"
@@ -305,6 +310,28 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
                   ))}
                 </div>
                 {wantsInjection === "yes" && (
+                  <>
+                    <Label>ইনজেকশনের সাথে ওষুধ আনতে হবে কি?</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["yes", "no"] as const).map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => {
+                            setBringMeds(v);
+                            if (v === "no") setMedicine(null);
+                          }}
+                          className={`min-h-11 rounded-xl border text-sm font-semibold ${
+                            bringMeds === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground"
+                          }`}
+                        >
+                          {v === "yes" ? "হ্যাঁ (নার্স আনবে)" : "না (আমরা দেব)"}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {bringMeds === "yes" && (
                   <>
                     <Label>ওষুধের নাম লিখুন (যেমন Ceftron)</Label>
                     <MedicineSearch value={medicine} onChange={setMedicine} />
