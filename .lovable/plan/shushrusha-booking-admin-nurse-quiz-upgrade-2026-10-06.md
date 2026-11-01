@@ -1,7 +1,7 @@
 # Shushrusha — Booking, Admin, Nurse & Quiz Upgrade
 
 ## 1. Nursing booking wizard
-- Ask "ইনজেকশন দিতে হবে কি?" with হ্যাঁ / না buttons. Choosing হ্যাঁ shows the medicine search. Results list each brand with its strengths and prices, e.g. "Ceftron 500mg - ৳150".
+- Ask "ইনজেকশন দিতে হবে কি?" with হ্যাঁ / না buttons. Choosing হ্যাঁ shows the medicine search, and also asks "ইনজেকশনের সাথে ওষুধ আনতে হবে কি?" with হ্যাঁ / না buttons. Results list each brand with its strengths and prices, e.g. "Ceftron 500mg - ৳150".
 - Add a "ক্যানুলা প্রয়োজন?" toggle. Choosing হ্যাঁ adds the cannula kit fee automatically. The admin can change the fee under service prices.
 - Fix the price calculation. The total is (pushes × price per push) + medicine + cannula + vitals + visit charge − discounts. The visit charge is always added.
 - Add a multi-line box for medical instructions just before checkout.
