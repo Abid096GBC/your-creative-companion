@@ -134,7 +134,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const patient = patients.find((p) => p.id === patientId);
 
   const canNext = [
-    picked.length > 0 && (!hasInjection || (wantsInjection !== "" && (wantsInjection === "no" || Boolean(medicine)))),
+    picked.length > 0 && (!hasInjection || (wantsInjection !== "" && (wantsInjection === "no" || (bringMeds !== "" && (bringMeds === "no" || Boolean(medicine)))))),
     Boolean(patientId),
     Boolean(
       address.trim() &&
