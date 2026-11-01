@@ -87,6 +87,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const [applied, setApplied] = useState(0);
   const [promoMsg, setPromoMsg] = useState("");
   const [wantsInjection, setWantsInjection] = useState<"yes" | "no" | "">("");
+  const [bringMeds, setBringMeds] = useState<"yes" | "no" | "">("");
   const [cannula, setCannula] = useState(false);
   const [fees, setFees] = useState({ visit: CONVENIENCE_FEE, cannula: 150 });
   const [useCash, setUseCash] = useState(false);
