@@ -287,7 +287,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
             })}
             {hasInjection && (
               <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
-                <Label>ইনজেকশন দিতে হবে কি?</Label>
+                <Label>ইনজেকশন এর মেডিসিন দিতে হবে কি?</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {(["yes", "no"] as const).map((v) => (
                     <button
@@ -295,7 +295,10 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
                       type="button"
                       onClick={() => {
                         setWantsInjection(v);
-                        if (v === "no") setMedicine(null);
+                        if (v === "no") {
+                          setMedicine(null);
+                          setBringMeds("");
+                        }
                       }}
                       className={`min-h-11 rounded-xl border text-sm font-semibold ${
                         wantsInjection === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground"
@@ -306,6 +309,28 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
                   ))}
                 </div>
                 {wantsInjection === "yes" && (
+                  <>
+                    <Label>ইনজেকশনের সাথে ওষুধ আনতে হবে কি?</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["yes", "no"] as const).map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => {
+                            setBringMeds(v);
+                            if (v === "no") setMedicine(null);
+                          }}
+                          className={`min-h-11 rounded-xl border text-sm font-semibold ${
+                            bringMeds === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-foreground"
+                          }`}
+                        >
+                          {v === "yes" ? "হ্যাঁ (নার্স আনবে)" : "না (আমরা দেব)"}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {bringMeds === "yes" && (
                   <>
                     <Label>ওষুধের নাম লিখুন (যেমন Ceftron)</Label>
                     <MedicineSearch value={medicine} onChange={setMedicine} />
