@@ -123,7 +123,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const hasInjection = picked.includes("injection");
   const hasWound = picked.includes("dressing") || picked.includes("suturing");
   const doseCount = hasInjection ? doses.length : 1;
-  const medPrice = hasInjection && wantsInjection === "yes" ? medicine?.price ?? 0 : 0;
+  const medPrice = hasInjection && bringMeds === "yes" ? medicine?.price ?? 0 : 0;
   const linePrice = (s: Item) => (s.id === "injection" ? (s.price + medPrice) * doseCount : s.price);
   const cannulaFee = hasInjection && cannula ? fees.cannula : 0;
   const serviceTotal = chosen.reduce((n, s) => n + linePrice(s), 0) + cannulaFee;
