@@ -8,6 +8,13 @@
       "when": 1793631860810,
       "tag": "0000_fix_rls_server_only_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793631894755,
+      "tag": "0001_tighten_client_grants",
+      "breakpoints": true
     }
   ]
 }
