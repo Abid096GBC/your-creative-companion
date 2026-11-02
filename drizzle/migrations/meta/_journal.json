@@ -15,6 +15,13 @@
       "when": 1793631894755,
       "tag": "0001_tighten_client_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793631935707,
+      "tag": "0002_deny_direct_client_access_core_tables",
+      "breakpoints": true
     }
   ]
 }
