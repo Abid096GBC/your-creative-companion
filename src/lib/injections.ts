@@ -1,3 +1,4 @@
+// ============= Full file contents =============
 export type InjectionItem = {
   brand: string;
   company: string;
@@ -15,9 +16,15 @@ function build(
   );
 }
 
+/**
+ * DGDA-approved cGMP company brands with approximate regular market prices (৳).
+ * `price` is the regular market MRP — the admin-set discount is applied on top
+ * via `injectionNet()` (see app_settings key INJECTION_DISCOUNT_KEY).
+ */
 export const INJECTIONS: InjectionItem[] = [
   ...build("Ceftriaxone", [
     ["Square", "Ceftron", [["250mg", 90], ["500mg", 140], ["1g", 280], ["2g", 480]]],
+    ["Incepta", "Monocef", [["250mg", 70], ["500mg", 105], ["1g", 200], ["2g", 380]]],
     ["Incepta", "Rocipex", [["250mg", 85], ["500mg", 130], ["1g", 200], ["2g", 380]]],
     ["Beximco", "Tricef", [["500mg", 140], ["1g", 250]]],
     ["Renata", "Axentri", [["500mg", 135], ["1g", 240]]],
@@ -32,6 +39,11 @@ export const INJECTIONS: InjectionItem[] = [
     ["Beacon", "Beacef", [["500mg", 120], ["1g", 210]]],
     ["General", "Genef", [["500mg", 110], ["1g", 190]]],
     ["Radiant", "Radicef", [["1g", 300]]],
+  ]),
+  ...build("Cefuroxime", [
+    ["Beximco", "Procef", [["500mg", 350], ["750mg", 450]]],
+    ["Square", "Ceftum", [["500mg", 340]]],
+    ["Incepta", "Zinnax", [["500mg", 320]]],
   ]),
   ...build("Meropenem", [
     ["Square", "Meropen", [["500mg", 700], ["1g", 1200]]],
@@ -50,9 +62,49 @@ export const INJECTIONS: InjectionItem[] = [
     ["General", "Genopenem", [["500mg", 600], ["1g", 1000]]],
     ["Globe", "Glo-Meropenem", [["500mg", 580], ["1g", 950]]],
   ]),
-  ...build("Pantoprazole", [["Incepta", "Pantonix IV", [["40mg", 100]]]]),
-  ...build("Omeprazole", [["Square", "Seclo IV", [["40mg", 95]]]]),
-  ...build("Ketorolac", [["Square", "Torax IV/IM", [["30mg", 60]]]]),
+  ...build("Pantoprazole", [
+    ["Square", "Pantix IV", [["40mg", 260]]],
+    ["Incepta", "Pantonix IV", [["40mg", 100]]],
+  ]),
+  ...build("Esomeprazole", [
+    ["Healthcare", "Sergel IV", [["40mg", 230]]],
+    ["Square", "Esosec IV", [["40mg", 210]]],
+  ]),
+  ...build("Ketorolac", [
+    ["Renata", "Toradol", [["10mg/ml", 90]]],
+    ["Square", "Torax IV/IM", [["30mg", 60]]],
+  ]),
+  ...build("Nalbuphine", [
+    ["Incepta", "V-mon IV", [["10mg", 150]]],
+  ]),
+  ...build("Lidocaine HCl", [
+    ["Aristopharma", "Xylocaine", [["2% 30ml", 60]]],
+  ]),
+  ...build("Ciprofloxacin", [
+    ["Beximco", "Neocip", [["200mg", 180]]],
+    ["Square", "Ciprocin IV", [["200mg", 170]]],
+  ]),
+  ...build("Etofylline + Theophylline", [
+    ["Ziska", "Deriphyllin IV", [["1 vial", 60]]],
+  ]),
+  ...build("Furosemide", [
+    ["Sanofi Bangladesh", "Lasix", [["20mg", 17]]],
+  ]),
+  ...build("Ondansetron", [
+    ["Square", "Emistat", [["4mg", 25], ["8mg", 35]]],
+    ["Incepta", "Ofran", [["8mg", 30]]],
+  ]),
+  ...build("Diclofenac Sodium", [
+    ["Square", "Difenac", [["75mg", 25]]],
+    ["Incepta", "Dologen", [["75mg", 30]]],
+  ]),
+  ...build("Dexamethasone", [
+    ["Incepta", "Dexason", [["5mg", 15]]],
+    ["Square", "Decdan", [["5mg", 14]]],
+  ]),
+  ...build("Metoclopramide", [
+    ["Square", "Motigut", [["10mg", 12]]],
+  ]),
 ];
 
 export function searchInjections(query: string, limit = 8): InjectionItem[] {
@@ -75,4 +127,13 @@ export function searchInjections(query: string, limit = 8): InjectionItem[] {
 
 export function injectionLabel(i: InjectionItem) {
   return `${i.brand} ${i.strength} (${i.generic}, ${i.company}) — ৳${i.price}`;
+}
+
+/** app_settings key holding the admin-managed injection discount percentage. */
+export const INJECTION_DISCOUNT_KEY = "injection_discount_pct";
+
+/** Discounted injection price after the admin-set percentage (bounded 0–90%). */
+export function injectionNet(item: Pick<InjectionItem, "price">, discountPct: number) {
+  const pct = Math.max(0, Math.min(90, Number(discountPct) || 0));
+  return Math.max(1, Math.round(item.price * (1 - pct / 100)));
 }
