@@ -22,6 +22,13 @@
       "when": 1793631935707,
       "tag": "0002_deny_direct_client_access_core_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793750487395,
+      "tag": "0003_booking_category_routing",
+      "breakpoints": true
     }
   ]
 }

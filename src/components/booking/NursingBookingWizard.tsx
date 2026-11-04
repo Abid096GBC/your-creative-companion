@@ -22,8 +22,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createBooking } from "@/lib/bookings.functions";
 import { recordBkashPayment } from "@/lib/catalog.functions";
+import { validatePromo } from "@/lib/customer.functions";
+import { bkashStart } from "@/lib/bkash.functions";
+import { calculatePricing } from "@/lib/pricingCalculator";
 import { loadGamer, loadProfile, loadWallet, saveGamer, saveWallet } from "@/lib/account-store";
-import type { InjectionItem } from "@/lib/injections";
+import { INJECTION_DISCOUNT_KEY, injectionNet, type InjectionItem } from "@/lib/injections";
 import { BkashCheckout, BkashOption } from "@/components/payment/BkashCheckout";
 import { BODY_PARTS, BodyPartSelector, DoseScheduler, MedicineSearch, StitchCounter, type Dose } from "@/components/booking/ServiceExtras";
 import { PatientSelectorModal } from "@/components/booking/PatientSelectorModal";
@@ -83,6 +86,8 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const [busy, setBusy] = useState(false);
   const book = useServerFn(createBooking);
   const recordPay = useServerFn(recordBkashPayment);
+  const checkPromo = useServerFn(validatePromo);
+  const startBkash = useServerFn(bkashStart);
   const [promo, setPromo] = useState("");
   const [applied, setApplied] = useState(0);
   const [promoMsg, setPromoMsg] = useState("");
@@ -90,6 +95,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const [bringMeds, setBringMeds] = useState<"yes" | "no" | "">("");
   const [cannula, setCannula] = useState(false);
   const [fees, setFees] = useState({ visit: CONVENIENCE_FEE, cannula: 150 });
+  const [injDisc, setInjDisc] = useState(0);
   const [useCash, setUseCash] = useState(false);
   const [cashAvail, setCashAvail] = useState(0);
 
@@ -100,13 +106,14 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
     void supabase
       .from("app_settings")
       .select("key, value")
-      .in("key", ["visit_charge", "cannula_fee"])
+      .in("key", ["visit_charge", "cannula_fee", INJECTION_DISCOUNT_KEY])
       .then(({ data }) => {
         const m = Object.fromEntries((data ?? []).map((r) => [r.key, Number(r.value)]));
         setFees({
           visit: Number.isFinite(m["visit_charge"]) ? m["visit_charge"]! : CONVENIENCE_FEE,
           cannula: Number.isFinite(m["cannula_fee"]) ? m["cannula_fee"]! : 150,
         });
+        setInjDisc(Number.isFinite(m[INJECTION_DISCOUNT_KEY]) ? m[INJECTION_DISCOUNT_KEY]! : 0);
       });
     // Admin-managed prices override the defaults.
     void supabase
@@ -123,14 +130,28 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
   const hasInjection = picked.includes("injection");
   const hasWound = picked.includes("dressing") || picked.includes("suturing");
   const doseCount = hasInjection ? doses.length : 1;
-  const medPrice = hasInjection && bringMeds === "yes" ? medicine?.price ?? 0 : 0;
+  // Discounted injection price: admin sets the % off; the regular price is shown crossed out.
+  const medPrice = hasInjection && bringMeds === "yes" ? injectionNet(medicine ?? { price: 0 }, injDisc) : 0;
   const linePrice = (s: Item) => (s.id === "injection" ? (s.price + medPrice) * doseCount : s.price);
   const cannulaFee = hasInjection && cannula ? fees.cannula : 0;
-  const serviceTotal = chosen.reduce((n, s) => n + linePrice(s), 0) + cannulaFee;
+  const pricing = useMemo(
+    () =>
+      calculatePricing({
+        services: chosen,
+        medPrice,
+        doseCount,
+        cannulaFee,
+        visitFee: fees.visit,
+        promoDiscount: applied,
+        walletCash: useCash ? cashAvail : 0,
+      }),
+    [chosen, medPrice, doseCount, cannulaFee, fees.visit, applied, useCash, cashAvail],
+  );
+  const serviceTotal = pricing.serviceTotal;
   // Visit / delivery charge is always added once, regardless of push count.
-  const gross = serviceTotal + fees.visit;
-  const walletDiscount = useCash ? Math.min(cashAvail, Math.max(0, gross - applied)) : 0;
-  const total = Math.max(0, gross - walletDiscount - applied);
+  const gross = pricing.gross;
+  const walletDiscount = pricing.walletDiscount;
+  const total = pricing.total;
   const patient = patients.find((p) => p.id === patientId);
 
   const canNext = [
@@ -148,17 +169,16 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
     setPicked((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
   }
 
-  function applyPromo() {
+  async function applyPromo() {
     const code = promo.trim().toUpperCase();
-    if (code === "SHUSHRUSHA50") {
-      setApplied(50);
-      setPromoMsg("৳৫০ ছাড় প্রয়োগ হয়েছে।");
-    } else if (code === "CARE10") {
-      setApplied(Math.round(serviceTotal * 0.1));
-      setPromoMsg("১০% ছাড় প্রয়োগ হয়েছে।");
-    } else {
+    if (!code) return;
+    try {
+      const res = await checkPromo({ data: { code, subtotal: serviceTotal } });
+      setApplied(res.ok ? res.discount : 0);
+      setPromoMsg(res.ok ? `✅ ${res.label} প্রয়োগ হয়েছে` : `⚠️ ${res.message}`);
+    } catch {
       setApplied(0);
-      setPromoMsg("কোডটি সঠিক নয়।");
+      setPromoMsg("কোড যাচাই করা যায়নি।");
     }
   }
 
@@ -167,8 +187,9 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
     setPrescription(await fileToCompressedDataUrl(file));
   }
 
-  async function confirm(trxId?: string) {
-    if (!patient) return;
+  /** Books the order on the server and returns the unpaid local order; marks it paid when a bKash trxId is given. */
+  async function persistOrder(trxId?: string): Promise<{ trackingId: string; unpaid: LocalOrder } | null> {
+    if (!patient) return null;
     setBusy(true);
     const profile = loadProfile();
     const slotLabel = (id: string) => SLOTS.find((s) => s.id === id)?.label ?? id;
@@ -187,6 +208,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
       const res = await book({
         data: {
           service: chosen.map((s) => s.en).join(", "),
+          category: "nursing",
           customer_name: patient.name,
           phone: profile.phone || "01000000000",
           address,
@@ -206,18 +228,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
       toast.error("সার্ভারে সেভ করা যায়নি — লোকালি সেভ হয়েছে");
     }
     setBusy(false);
-    if (walletDiscount > 0) {
-      let left = walletDiscount;
-      const w = loadWallet();
-      const fromWallet = Math.min(w, left);
-      saveWallet(w - fromWallet);
-      left -= fromWallet;
-      if (left > 0) {
-        const g = loadGamer();
-        saveGamer({ ...g, points: Math.max(0, g.points - Math.ceil(left / 10) * 100) });
-      }
-    }
-    const order: LocalOrder = {
+    const unpaid: LocalOrder = {
       id: trackingId,
       category: "nursing",
       serviceName: chosen.map((s) => s.title).join(", "),
@@ -230,7 +241,6 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
       notes: [notes, ...extras].filter(Boolean).join("\n"),
       prescription,
       payment: payment === "cash" ? "Cash on Service" : payment === "wallet" ? "Shushrusha Wallet" : "bKash PGW",
-      ...(trxId ? { paymentStatus: "Paid" as const, paymentMethod: "bKash PGW", trxId } : {}),
       amount: total,
       nurse: {
         name: "সুমাইয়া আক্তার",
@@ -240,8 +250,41 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
       },
       createdAt: new Date().toISOString(),
     };
-    saveOrder(order);
+    return { trackingId, unpaid };
+  }
+
+  function spendWallet(discount: number) {
+    if (discount <= 0) return;
+    let left = discount;
+    const w = loadWallet();
+    const fromWallet = Math.min(w, left);
+    saveWallet(w - fromWallet);
+    left -= fromWallet;
+    if (left > 0) {
+      const g = loadGamer();
+      saveGamer({ ...g, points: Math.max(0, g.points - Math.ceil(left / 10) * 100) });
+    }
+  }
+
+  async function confirm(trxId?: string) {
+    const saved = await persistOrder(trxId);
+    if (!saved) return;
+    spendWallet(walletDiscount);
+    saveOrder({
+      ...saved.unpaid,
+      ...(trxId ? { paymentStatus: "Paid" as const, paymentMethod: "bKash PGW", trxId } : {}),
+    });
     void navigate({ to: "/orders" });
+  }
+
+  /** Real bKash Tokenized Checkout: book unpaid, then hand the payer over to bKash. */
+  async function startLiveBkash(acc: string) {
+    const saved = await persistOrder();
+    if (!saved) return;
+    spendWallet(walletDiscount);
+    saveOrder(saved.unpaid);
+    const res = await startBkash({ data: { trackingId: saved.trackingId, amount: total, phone: acc } });
+    if (res.live && res.url) window.location.href = res.url;
   }
 
   return (
@@ -334,7 +377,19 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
                 {bringMeds === "yes" && (
                   <>
                     <Label>ওষুধের নাম লিখুন (যেমন Ceftron)</Label>
-                    <MedicineSearch value={medicine} onChange={setMedicine} />
+                    <MedicineSearch value={medicine} onChange={setMedicine} discountPct={injDisc} />
+                    {medicine && (
+                      <p className="text-xs text-foreground">
+                        {medicine.brand} {medicine.strength} • {medicine.company} —{" "}
+                        <span className="text-muted-foreground line-through">৳{medicine.price}</span>{" "}
+                        <span className="font-bold text-primary">৳{medPrice}</span>
+                        {injDisc > 0 && (
+                          <span className="ml-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-bold text-destructive">
+                            -{injDisc}% OFF
+                          </span>
+                        )}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">ওষুধের দাম প্রতি পুশে যোগ হবে। পুশ / ডোজ সংখ্যা পরের ধাপে বেছে নিন।</p>
                   </>
                 )}
@@ -422,13 +477,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
               <Label>
                 <Clock className="mr-1 inline size-4" /> টাইম স্লট
               </Label>
-              <label className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-background px-3">
-              <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <Wallet className="size-4 text-primary" /> শুশ্রূষা ক্যাশ ব্যবহার করুন (৳{cashAvail} আছে)
-              </span>
-              <input type="checkbox" className="size-5 accent-primary" disabled={cashAvail <= 0} checked={useCash} onChange={(e) => setUseCash(e.target.checked)} />
-            </label>
-            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {SLOTS.map((s) => (
                   <button
                     key={s.id}
@@ -581,6 +630,7 @@ export function NursingBookingWizard({ initialService }: { initialService?: stri
               open={bkashOpen}
               amount={total}
               onClose={() => setBkashOpen(false)}
+              liveStart={startLiveBkash}
               onSuccess={(trx) => {
                 setBkashOpen(false);
                 void confirm(trx);

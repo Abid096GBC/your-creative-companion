@@ -5,6 +5,7 @@ import { NURSE_STATUSES, PAYMENT_STATUSES, STATUSES } from "@/lib/booking-types"
 
 const bookingSchema = z.object({
   service: z.string().trim().min(2).max(120),
+  category: z.enum(["nursing", "doctor", "lab", "store"]).default("nursing"),
   customer_name: z.string().trim().min(2).max(80),
   phone: z.string().trim().min(6).max(20),
   address: z.string().trim().min(4).max(240),
@@ -39,6 +40,7 @@ export const createBooking = createServerFn({ method: "POST" })
       .insert({
         tracking_id: makeTrackingId(),
         service: data.service,
+        category: data.category,
         customer_name: data.customer_name,
         phone: data.phone,
         address: data.address,

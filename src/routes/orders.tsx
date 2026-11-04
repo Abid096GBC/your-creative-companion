@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PackageSearch, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
@@ -10,6 +11,7 @@ import { OrderTabs } from "@/components/orders/OrderTabs";
 import { NurseTrackerModal } from "@/components/orders/NurseTrackerModal";
 import {
   ACTIVE_STATUSES,
+  markOrderPaid,
   useOrders,
   type LocalOrder,
   type OrderCategory,
@@ -39,6 +41,22 @@ function OrdersPage() {
   const [cat, setCat] = useState<OrderCategory>("nursing");
   const [view, setView] = useState<"active" | "past">("active");
   const [tracking, setTracking] = useState<LocalOrder | null>(null);
+
+  // Real bKash flow returns here after payment — sync the local order once.
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const result = sp.get("bkash");
+    const id = sp.get("id");
+    const trx = sp.get("trx");
+    if (!result || !id) return;
+    if (result === "success" && trx) {
+      markOrderPaid(id, trx);
+      toast.success(`বিকাশ পেমেন্ট সফল — TrxID ${trx}`);
+    } else {
+      toast.error("বিকাশ পেমেন্ট সম্পন্ন হয়নি — অর্ডারটি অপেমেন্ট ছাড়া আছে।");
+    }
+    window.history.replaceState({}, "", window.location.pathname);
+  }, []);
 
   const counts = useMemo(() => {
     const base: Record<OrderCategory, number> = { nursing: 0, doctor: 0, lab: 0, store: 0 };

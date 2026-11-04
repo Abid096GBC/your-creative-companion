@@ -1,9 +1,12 @@
+// ============= Full file contents =============
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { bkashMode } from "@/lib/bkash.functions";
 
 const BKASH = "#D12053";
 
@@ -42,12 +45,16 @@ export function BkashCheckout({
   amount,
   onClose,
   onSuccess,
+  liveStart,
 }: {
   open: boolean;
   amount: number;
   onClose: () => void;
   onSuccess: (trxId: string) => void;
+  /** When real bKash credentials are configured, called with the bKash account number — the parent books the order and redirects to bKash. */
+  liveStart?: (account: string) => Promise<void>;
 }) {
+  const checkMode = useServerFn(bkashMode);
   const [step, setStep] = useState<Step>("account");
   const [acc, setAcc] = useState("");
   const [otp, setOtp] = useState("");
@@ -55,6 +62,8 @@ export function BkashCheckout({
   const [err, setErr] = useState("");
   const [trx, setTrx] = useState("");
   const [link, setLink] = useState("");
+  const [live, setLive] = useState(false);
+  const [liveBusy, setLiveBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -63,18 +72,39 @@ export function BkashCheckout({
     setOtp("");
     setPin("");
     setErr("");
+    setTrx("");
     void supabase
       .from("app_settings")
       .select("value")
       .eq("key", "bkash_payment_link")
       .maybeSingle()
       .then(({ data }) => setLink(data?.value ?? ""));
+    void checkMode({})
+      .then((m) => setLive(Boolean(m.live)))
+      .catch(() => setLive(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  async function goLive(account: string) {
+    if (!liveStart) return;
+    setErr("");
+    setLiveBusy(true);
+    try {
+      await liveStart(account);
+      // liveStart redirects the browser to bKash; nothing else to render.
+    } catch {
+      setErr("বিকাশ পেমেন্ট শুরু করা যায়নি — আবার চেষ্টা করুন।");
+    } finally {
+      setLiveBusy(false);
+    }
+  }
 
   function next() {
     setErr("");
     if (step === "account") {
       if (!/^01[3-9]\d{8}$/.test(acc)) return setErr("সঠিক ১১ সংখ্যার বিকাশ নম্বর দিন");
+      // Real bKash Tokenized Checkout: the OTP/PIN happens on bKash's own page.
+      if (live && liveStart) return void goLive(acc);
       setStep("otp");
     } else if (step === "otp") {
       if (otp !== "123456") return setErr("ভুল OTP (ডেমো: 123456)");
@@ -91,7 +121,7 @@ export function BkashCheckout({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && step !== "processing" && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => !o && step !== "processing" && !liveBusy && onClose()}>
       <DialogContent className="overflow-hidden p-0 sm:max-w-sm">
         <div className="p-4 text-primary-foreground" style={{ background: BKASH }}>
           <DialogTitle className="text-lg font-extrabold">bKash Payment</DialogTitle>
@@ -108,21 +138,25 @@ export function BkashCheckout({
             <>
               <p className="text-sm font-medium text-foreground">আপনার বিকাশ অ্যাকাউন্ট নম্বর</p>
               <Input className="min-h-11 text-center text-lg tracking-widest" inputMode="numeric" maxLength={11} placeholder="01XXXXXXXXX" value={acc} onChange={(e) => setAcc(e.target.value.replace(/\D/g, ""))} />
-              {link && (
-                <a href={link} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-xs font-semibold underline" style={{ color: BKASH }}>
-                  <ExternalLink className="size-3.5" /> সরাসরি বিকাশ মার্চেন্ট লিংকে পেমেন্ট করুন
-                </a>
+              {live && liveStart ? (
+                <p className="text-center text-xs text-muted-foreground">পরের ধাপে বিকাশের নিজস্ব পেজে OTP ও PIN দেবেন।</p>
+              ) : (
+                link && (
+                  <a href={link} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1 text-xs font-semibold underline" style={{ color: BKASH }}>
+                    <ExternalLink className="size-3.5" /> সরাসরি বিকাশ মার্চেন্ট লিংকে পেমেন্ট করুন
+                  </a>
+                )
               )}
             </>
           )}
-          {step === "otp" && (
+          {!live && step === "otp" && (
             <>
               <p className="text-sm text-foreground">{acc} নম্বরে পাঠানো ৬ সংখ্যার কোড দিন</p>
               <Input className="min-h-11 text-center text-lg tracking-[0.5em]" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} />
               <p className="text-center text-[11px] text-muted-foreground">ডেমো OTP: 123456</p>
             </>
           )}
-          {step === "pin" && (
+          {!live && step === "pin" && (
             <>
               <p className="text-sm text-foreground">বিকাশ PIN দিন</p>
               <Input type="password" className="min-h-11 text-center text-lg tracking-[0.5em]" inputMode="numeric" maxLength={5} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
@@ -151,9 +185,9 @@ export function BkashCheckout({
             </Button>
           ) : step !== "processing" ? (
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="min-h-11" onClick={onClose}>বাতিল</Button>
-              <Button className="min-h-11 text-primary-foreground" style={{ background: BKASH }} onClick={next}>
-                {step === "pin" ? "পেমেন্ট করুন" : "পরবর্তী"}
+              <Button variant="outline" className="min-h-11" disabled={liveBusy} onClick={onClose}>বাতিল</Button>
+              <Button className="min-h-11 text-primary-foreground" style={{ background: BKASH }} disabled={liveBusy} onClick={next}>
+                {liveBusy ? <Loader2 className="animate-spin" /> : step === "pin" ? "পেমেন্ট করুন" : "পরবর্তী"}
               </Button>
             </div>
           ) : null}

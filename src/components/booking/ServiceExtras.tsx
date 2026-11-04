@@ -1,16 +1,19 @@
 import { useMemo, useState } from "react";
 import { Minus, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { INJECTIONS, type InjectionItem } from "@/lib/injections";
+import { INJECTIONS, injectionNet, type InjectionItem } from "@/lib/injections";
 
-/* ---------- Medicine autocomplete ---------- */
+/* ---------- Medicine autocomplete (YouTube-style dropdown) ---------- */
 
 export function MedicineSearch({
   value,
   onChange,
+  discountPct = 0,
 }: {
   value: InjectionItem | null;
   onChange: (m: InjectionItem | null) => void;
+  /** Admin-managed discount % shown against every regular price. */
+  discountPct?: number;
 }) {
   const [q, setQ] = useState(value ? `${value.brand} ${value.strength}` : "");
   const [open, setOpen] = useState(false);
@@ -37,30 +40,46 @@ export function MedicineSearch({
         }}
       />
       {open && hits.length > 0 && (
-        <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-border bg-popover shadow-card">
-          {hits.map((h) => (
-            <li key={`${h.brand}-${h.strength}`}>
-              <button
-                type="button"
-                className="flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-secondary"
-                onClick={() => {
-                  onChange(h);
-                  setQ(`${h.brand} ${h.strength}`);
-                  setOpen(false);
-                }}
-              >
-                <span className="min-w-0">
-                  <span className="block font-semibold text-foreground">
-                    {h.brand} <span className="font-normal text-muted-foreground">{h.strength}</span>
+        <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-border bg-popover shadow-card">
+          <li className="border-b border-border bg-secondary/50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {hits.length} টি মিল পাওয়া গেছে{discountPct > 0 ? ` • সব দামে -${discountPct}% ছাড়` : ""}
+          </li>
+          {hits.map((h, idx) => {
+            const net = injectionNet(h, discountPct);
+            return (
+              <li key={`${h.brand}-${h.strength}-${idx}`}>
+                <button
+                  type="button"
+                  className="flex min-h-14 w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-secondary"
+                  onClick={() => {
+                    onChange(h);
+                    setQ(`${h.brand} ${h.strength}`);
+                    setOpen(false);
+                  }}
+                >
+                  <span className="min-w-0">
+                    <span className="block font-semibold text-foreground">
+                      {h.brand} <span className="font-normal text-muted-foreground">{h.strength}</span>
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {h.generic} • {h.company}
+                    </span>
                   </span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {h.generic} • {h.company}
+                  <span className="shrink-0 text-right">
+                    {net < h.price && (
+                      <span className="mr-1 text-xs text-muted-foreground line-through">৳{h.price}</span>
+                    )}
+                    <span className="font-bold text-primary">৳{net}</span>
+                    {net < h.price && (
+                      <span className="ml-1 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-bold text-destructive">
+                        -{discountPct}% OFF
+                      </span>
+                    )}
                   </span>
-                </span>
-                <span className="shrink-0 font-bold text-primary">৳{h.price}</span>
-              </button>
-            </li>
-          ))}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

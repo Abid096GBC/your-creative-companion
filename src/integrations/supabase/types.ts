@@ -37,6 +37,7 @@ export type Database = {
           address: string
           amount: number | null
           body_region: string | null
+          category: string
           created_at: string
           customer_name: string
           details: Json
@@ -69,6 +70,7 @@ export type Database = {
           address: string
           amount?: number | null
           body_region?: string | null
+          category?: string
           created_at?: string
           customer_name: string
           details?: Json
@@ -101,6 +103,7 @@ export type Database = {
           address?: string
           amount?: number | null
           body_region?: string | null
+          category?: string
           created_at?: string
           customer_name?: string
           details?: Json
