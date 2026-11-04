@@ -2,6 +2,8 @@ export type BookingRow = {
   id: string;
   tracking_id: string;
   service: string;
+  /** Order routing queue: nursing (nurse dashboard), lab, doctor or store (admin). */
+  category?: string;
   customer_name: string;
   phone: string;
   address: string;

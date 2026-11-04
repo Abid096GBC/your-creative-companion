@@ -134,6 +134,7 @@ export const placeStoreOrder = createServerFn({ method: "POST" })
       .insert({
         tracking_id: makeTrackingId(),
         service: "সার্জিক্যাল স্টোর অর্ডার (Store Order)",
+        category: "store",
         customer_name: data.customer_name,
         phone: data.phone,
         address: data.address,

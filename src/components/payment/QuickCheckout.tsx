@@ -1,3 +1,4 @@
+// ============= Full file contents =============
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Stethoscope } from "lucide-react";
@@ -5,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createBooking } from "@/lib/bookings.functions";
 import { recordBkashPayment } from "@/lib/catalog.functions";
+import { bkashStart } from "@/lib/bkash.functions";
 import { newTrackingId, saveOrder, type LocalOrder } from "@/lib/orders-store";
 import { BkashCheckout, BkashOption } from "@/components/payment/BkashCheckout";
 
@@ -27,14 +29,17 @@ export function QuickCheckout({
   const [busy, setBusy] = useState(false);
   const book = useServerFn(createBooking);
   const record = useServerFn(recordBkashPayment);
+  const start = useServerFn(bkashStart);
 
-  async function submit(trxId?: string) {
+  /** Books the order on the server + locally; saves it unpaid when no trxId is given. */
+  async function persist(trxId?: string) {
     setBusy(true);
     let id = newTrackingId();
     try {
       const res = await book({
         data: {
           service: draft.serviceName.slice(0, 120),
+          category: draft.category,
           customer_name: draft.patientName.length >= 2 ? draft.patientName : "Patient",
           phone: draft.phone.length >= 6 ? draft.phone : "01000000000",
           address: draft.address.length >= 4 ? draft.address : "Dhaka",
@@ -59,8 +64,20 @@ export function QuickCheckout({
       createdAt: new Date().toISOString(),
     });
     setBusy(false);
+    return id;
+  }
+
+  async function submit(trxId?: string) {
+    const id = await persist(trxId);
     toast.success(`অর্ডার নিশ্চিত হয়েছে #${id}`);
     onDone(id);
+  }
+
+  /** Real bKash flow: book first (unpaid), then hand the payer to bKash. */
+  async function startLive(acc: string) {
+    const id = await persist();
+    const res = await start({ data: { trackingId: id, amount: draft.amount, phone: acc } });
+    if (res.live && res.url) window.location.href = res.url;
   }
 
   return (
@@ -89,6 +106,7 @@ export function QuickCheckout({
         open={open}
         amount={draft.amount}
         onClose={() => setOpen(false)}
+        liveStart={startLive}
         onSuccess={(trx) => {
           setOpen(false);
           void submit(trx);

@@ -25,6 +25,9 @@ export const workerFeed = createServerFn({ method: "POST" })
     const { data: open } = await supabaseAdmin
       .from("bookings")
       .select("*")
+      // Nurses only receive on-site nursing / injection tasks — lab, doctor and
+      // store orders stay in their own admin queues.
+      .eq("category", "nursing")
       .is("nurse_id", null)
       .in("tier", tiers)
       .neq("status", "Completed")

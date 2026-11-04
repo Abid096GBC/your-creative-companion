@@ -24,6 +24,7 @@ import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as WorkerRouteImport } from './routes/worker'
 import { Route as BookingNursingRouteImport } from './routes/booking.nursing'
 import { Route as DoctorsSpecialtyRouteImport } from './routes/doctors.$specialty'
+import { Route as ApiPublicBkashCallbackRouteImport } from './routes/api/public/bkash.callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -100,6 +101,11 @@ const DoctorsSpecialtyRoute = DoctorsSpecialtyRouteImport.update({
   path: '/doctors/$specialty',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBkashCallbackRoute = ApiPublicBkashCallbackRouteImport.update({
+  id: '/api/public/bkash/callback',
+  path: '/api/public/bkash/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
   '/doctors/$specialty': typeof DoctorsSpecialtyRoute
+  '/api/public/bkash/callback': typeof ApiPublicBkashCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
   '/doctors/$specialty': typeof DoctorsSpecialtyRoute
+  '/api/public/bkash/callback': typeof ApiPublicBkashCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/worker': typeof WorkerRoute
   '/booking/nursing': typeof BookingNursingRoute
   '/doctors/$specialty': typeof DoctorsSpecialtyRoute
+  '/api/public/bkash/callback': typeof ApiPublicBkashCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/worker'
     | '/booking/nursing'
     | '/doctors/$specialty'
+    | '/api/public/bkash/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/worker'
     | '/booking/nursing'
     | '/doctors/$specialty'
+    | '/api/public/bkash/callback'
   id:
     | '__root__'
     | '/'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/worker'
     | '/booking/nursing'
     | '/doctors/$specialty'
+    | '/api/public/bkash/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -223,6 +235,7 @@ export interface RootRouteChildren {
   WorkerRoute: typeof WorkerRoute
   BookingNursingRoute: typeof BookingNursingRoute
   DoctorsSpecialtyRoute: typeof DoctorsSpecialtyRoute
+  ApiPublicBkashCallbackRoute: typeof ApiPublicBkashCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -332,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DoctorsSpecialtyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bkash/callback': {
+      id: '/api/public/bkash/callback'
+      path: '/api/public/bkash/callback'
+      fullPath: '/api/public/bkash/callback'
+      preLoaderRoute: typeof ApiPublicBkashCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -351,6 +371,7 @@ const rootRouteChildren: RootRouteChildren = {
   WorkerRoute: WorkerRoute,
   BookingNursingRoute: BookingNursingRoute,
   DoctorsSpecialtyRoute: DoctorsSpecialtyRoute,
+  ApiPublicBkashCallbackRoute: ApiPublicBkashCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
