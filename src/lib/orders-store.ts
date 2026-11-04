@@ -109,6 +109,16 @@ export function updateOrderStatus(id: string, status: OrderStatus) {
   );
 }
 
+/** Marks a locally saved order paid via bKash (used after the bKash callback redirect). */
+export function markOrderPaid(id: string, trxId: string) {
+  write(
+    ORDERS_KEY,
+    loadOrders().map((o) =>
+      o.id === id ? { ...o, paymentStatus: "Paid" as const, paymentMethod: "bKash PGW", trxId } : o,
+    ),
+  );
+}
+
 export function newTrackingId() {
   return `SHU-${Math.floor(1000 + Math.random() * 9000)}`;
 }
