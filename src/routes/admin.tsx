@@ -333,7 +333,7 @@ function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
+                {shown.map((r) => {
                   const nurse = r.nurse_id ? nurseById.get(r.nurse_id) : undefined;
                   return (
                     <tr key={r.id} className="border-t border-border align-top">
@@ -458,7 +458,7 @@ function AdminPage() {
                     </tr>
                   );
                 })}
-                {rows.length === 0 && (
+                {shown.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
                       এখনো কোনো বুকিং নেই।
@@ -468,6 +468,7 @@ function AdminPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {tab === "nurses" && (
