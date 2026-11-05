@@ -14,6 +14,7 @@ import { listStore, placeStoreOrder, validatePromo } from "@/lib/customer.functi
 import { netPrice, type CatalogRow } from "@/lib/booking-types";
 import { BILLING_NOTE } from "@/lib/site";
 import { saveOrder } from "@/lib/orders-store";
+import { bkashStart } from "@/lib/bkash.functions";
 import { BkashCheckout, BkashOption } from "@/components/payment/BkashCheckout";
 import { recordBkashPayment } from "@/lib/catalog.functions";
 
@@ -95,9 +96,10 @@ function StorePage() {
     else void checkout();
   }
 
-  async function checkout(trxId?: string) {
+  async function persist(trxId?: string): Promise<string | null> {
     setBusy(true);
     setError("");
+    let id: string | null = null;
     try {
       const res = await order({
         data: {
@@ -109,7 +111,8 @@ function StorePage() {
           items: lines.map((l) => ({ id: l.item.id, qty: l.qty })),
         },
       });
-      if (trxId) await recordPay({ data: { trackingId: res.trackingId, trxId } }).catch(() => undefined);
+      id = res.trackingId;
+      if (trxId) await recordPay({ data: { trackingId: id, trxId } }).catch(() => undefined);
       saveOrder({
         ...(trxId ? { paymentStatus: "Paid" as const, paymentMethod: "bKash PGW", trxId } : {}),
         id: res.trackingId,
@@ -132,6 +135,19 @@ function StorePage() {
     } finally {
       setBusy(false);
     }
+    return id;
+  }
+
+  async function checkout(trxId?: string) {
+    await persist(trxId);
+  }
+
+  /** Real bKash Tokenized Checkout: create the order unpaid, then hand over to bKash. */
+  async function startLive(acc: string) {
+    const id = await persist();
+    if (!id) throw new Error("Order not created");
+    const res = await bkashStart({ data: { trackingId: id, amount: total, phone: acc } });
+    if (res.live && res.url) window.location.href = res.url;
   }
 
   return (
@@ -332,6 +348,7 @@ function StorePage() {
                 open={bkashOpen}
                 amount={total}
                 onClose={() => setBkashOpen(false)}
+                liveStart={startLive}
                 onSuccess={(trx) => {
                   setBkashOpen(false);
                   void checkout(trx);
