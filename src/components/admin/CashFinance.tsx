@@ -14,14 +14,14 @@ export function CashFinance({ password }: { password: string }) {
   const list = useServerFn(adminListCash);
   const save = useServerFn(adminSaveSetting);
   const [rows, setRows] = useState<Cash[]>([]);
-  const [fees, setFees] = useState({ visit_charge: "200", cannula_fee: "150" });
+  const [fees, setFees] = useState({ visit_charge: "200", cannula_fee: "150", injection_discount_pct: "0" });
 
   useEffect(() => {
     void list({ data: { password } }).then(setRows).catch(() => toast.error("লোড করা যায়নি"));
     void supabase
       .from("app_settings")
       .select("key, value")
-      .in("key", ["visit_charge", "cannula_fee"])
+      .in("key", ["visit_charge", "cannula_fee", "injection_discount_pct"])
       .then(({ data }) => {
         const m = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]));
         setFees((f) => ({ ...f, ...m }));
@@ -36,7 +36,7 @@ export function CashFinance({ password }: { password: string }) {
   async function saveFees() {
     try {
       await Promise.all(
-        (["visit_charge", "cannula_fee"] as const).map((key) =>
+        (["visit_charge", "cannula_fee", "injection_discount_pct"] as const).map((key) =>
           save({ data: { password, key, value: String(Number(fees[key]) || 0) } }),
         ),
       );
@@ -48,7 +48,7 @@ export function CashFinance({ password }: { password: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="card-elevated grid gap-3 p-5 sm:grid-cols-3">
+      <div className="card-elevated grid gap-3 p-5 sm:grid-cols-4">
         <div className="space-y-1">
           <Label>ভিজিট / ডেলিভারি চার্জ (৳)</Label>
           <Input className="min-h-11" type="number" value={fees.visit_charge} onChange={(e) => setFees({ ...fees, visit_charge: e.target.value })} />
@@ -56,6 +56,10 @@ export function CashFinance({ password }: { password: string }) {
         <div className="space-y-1">
           <Label>ক্যানুলা কিট ফি (৳)</Label>
           <Input className="min-h-11" type="number" value={fees.cannula_fee} onChange={(e) => setFees({ ...fees, cannula_fee: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <Label>ইনজেকশন ওষুধ ডিসকাউন্ট (%)</Label>
+          <Input className="min-h-11" type="number" min="0" max="90" value={fees.injection_discount_pct} onChange={(e) => setFees({ ...fees, injection_discount_pct: e.target.value })} />
         </div>
         <Button variant="hero" className="min-h-11 self-end" onClick={() => void saveFees()}>
           ফি সেভ করুন

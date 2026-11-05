@@ -64,6 +64,23 @@ const STATUS_STYLE: Record<string, string> = {
   Completed: "bg-whatsapp/20 text-foreground",
 };
 
+/** Role-based order routing queues: nursing → nurse dashboard, lab/doctor/store → admin. */
+const QUEUES = [
+  { id: "all", label: "সব অর্ডার" },
+  { id: "nursing", label: "🩺 নার্সিং / ইনজেকশন" },
+  { id: "lab", label: "🧪 ল্যাব অপারেশন" },
+  { id: "doctor", label: "👨‍⚕️ ডাক্তার অ্যাপয়েন্টমেন্ট" },
+  { id: "store", label: "📦 স্টোর অর্ডার" },
+] as const;
+type BookingQueue = (typeof QUEUES)[number]["id"];
+
+const CATEGORY_BADGE: Record<string, string> = {
+  nursing: "🩺 নার্স কিউ",
+  lab: "🧪 ল্যাব কিউ",
+  doctor: "👨‍⚕️ ডাক্তার কিউ",
+  store: "📦 স্টোর কিউ",
+};
+
 const TABS = [
   { id: "bookings", label: "বুকিং ও ডিসপ্যাচ" },
   { id: "nurses", label: "নার্স ডেটাবেজ" },
@@ -128,6 +145,7 @@ function AdminPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [dispatchFor, setDispatchFor] = useState<BookingRow | null>(null);
+  const [queue, setQueue] = useState<BookingQueue>("nursing");
   const [aiOut, setAiOut] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
@@ -136,6 +154,11 @@ function AdminPage() {
   const [medPrompt, setMedPrompt] = useState("");
 
   const nurseById = useMemo(() => new Map(nurses.map((n) => [n.id, n])), [nurses]);
+
+  const shown = useMemo(
+    () => rows.filter((r) => queue === "all" || (r.category ?? "nursing") === queue),
+    [rows, queue],
+  );
 
   async function runMed(extra: { prompt?: string; imageData?: string }) {
     setMedBusy(true);
@@ -282,7 +305,22 @@ function AdminPage() {
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
 
         {tab === "bookings" && (
-          <div className="card-elevated mt-6 overflow-x-auto p-0">
+          <>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {QUEUES.map((q) => (
+              <button
+                key={q.id}
+                type="button"
+                onClick={() => setQueue(q.id)}
+                className={`min-h-9 rounded-full border px-3 text-xs font-medium transition-colors ${
+                  queue === q.id ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-secondary"
+                }`}
+              >
+                {q.label}
+              </button>
+            ))}
+          </div>
+          <div className="card-elevated mt-3 overflow-x-auto p-0">
             <table className="w-full min-w-[1000px] text-sm">
               <thead className="bg-secondary/70 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
@@ -295,7 +333,7 @@ function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
+                {shown.map((r) => {
                   const nurse = r.nurse_id ? nurseById.get(r.nurse_id) : undefined;
                   return (
                     <tr key={r.id} className="border-t border-border align-top">
@@ -317,6 +355,9 @@ function AdminPage() {
                       </td>
                       <td className="px-4 py-3">
                         <p className="font-medium text-foreground">{r.service}</p>
+                        <span className="mt-1 inline-block rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                          {CATEGORY_BADGE[r.category ?? "nursing"] ?? CATEGORY_BADGE["nursing"]}
+                        </span>
                         <p className="text-xs text-muted-foreground">
                           {Object.entries(r.details ?? {})
                             .map(([k, v]) => `${k}: ${String(v)}`)
@@ -417,7 +458,7 @@ function AdminPage() {
                     </tr>
                   );
                 })}
-                {rows.length === 0 && (
+                {shown.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
                       এখনো কোনো বুকিং নেই।
@@ -427,6 +468,7 @@ function AdminPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {tab === "nurses" && (
