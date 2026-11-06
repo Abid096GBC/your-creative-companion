@@ -29,6 +29,13 @@
       "when": 1793750487395,
       "tag": "0003_booking_category_routing",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793928984446,
+      "tag": "0004_create_booking_dose_sessions",
+      "breakpoints": true
     }
   ]
 }

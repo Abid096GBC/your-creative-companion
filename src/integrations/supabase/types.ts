@@ -32,6 +32,66 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_dose_sessions: {
+        Row: {
+          booking_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          dose_number: number
+          id: string
+          nurse_share: number
+          scheduled_date: string
+          session_access_key: string
+          session_token: string
+          status: string
+          time_slot: string
+        }
+        Insert: {
+          booking_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          dose_number: number
+          id?: string
+          nurse_share?: number
+          scheduled_date?: string
+          session_access_key: string
+          session_token: string
+          status?: string
+          time_slot?: string
+        }
+        Update: {
+          booking_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          dose_number?: number
+          id?: string
+          nurse_share?: number
+          scheduled_date?: string
+          session_access_key?: string
+          session_token?: string
+          status?: string
+          time_slot?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_dose_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_dose_sessions_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "nurses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           address: string
