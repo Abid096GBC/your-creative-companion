@@ -1,0 +1,4 @@
+- [ ] Persist one secure verification session per nursing dose, including scheduled date and status.
+- [ ] Show session QR codes and completion progress on each nursing order detail page.
+- [ ] Verify scanned sessions in the nurse dashboard, unlock the next dose, and refresh nurse payout tracking.
+- [ ] Validate build, core flows, migration application, and roadmap completion.
